@@ -1,0 +1,31 @@
+{
+  "name": "line-maria-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/index.js",
+    "provision-db": "tsx scripts/provision-db.ts",
+    "reimport-districts": "tsx scripts/reimport-districts.ts"
+  },
+  "dependencies": {
+    "@types/multer": "^2.2.0",
+    "@types/ws": "^8.18.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "iconv-lite": "^0.7.3",
+    "multer": "^2.2.0",
+    "mysql2": "^3.14.3",
+    "nodemailer": "^9.0.5",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.3.0",
+    "@types/nodemailer": "^8.0.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
