@@ -100,6 +100,35 @@ function renderRequesterPage(userName:string,districtName:string,sessionExpiresA
 const USER_COOKIE = 'user_auth';
 const ROLES = Object.keys(roleData) as RoleKey[];
 
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  ⚠️  임시 개발용 로그인 우회 — 테스트 단계 전용                            ║
+// ║                                                                          ║
+// ║  로그인 시스템을 켜기 전 / 운영(prod) 배포 전에 반드시 삭제할 것.          ║
+// ║  삭제 대상 3곳 (모두 "임시 개발용 로그인 우회" 로 검색되면 찾을 수 있다):    ║
+// ║    1) 바로 아래 DEV_ROLE_COOKIE 상수와 devBypassRole() 함수                ║
+// ║    2) authenticateSession() 첫 줄의 우회 (← 이게 API 를 열어주므로 중요)    ║
+// ║    3) registerUserRoutes 의 app.get('/app') 안에 있는 우회 블록            ║
+// ║                                                                          ║
+// ║  두 조건을 모두 만족할 때만 동작하므로 그냥 배포해도 켜지지는 않는다:       ║
+// ║    - NODE_ENV !== 'production'                                           ║
+// ║    - DEV_AUTH_BYPASS === '1'                                             ║
+// ║  사용법: /app?devRole=requester | manager | secretary | executive         ║
+// ║                                                                          ║
+// ║  ⚠️ 켜져 있는 동안 /app/api/* 인증도 함께 통과한다 (authenticateSession).  ║
+// ║     비서실 화면처럼 로드 후 API 로 데이터를 받아오는 화면 때문에 필요하다.   ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+const DEV_ROLE_COOKIE = 'dev_role';
+
+function devBypassRole(request: express.Request): RoleKey | null {
+  if (process.env.NODE_ENV === 'production') return null;
+  if (process.env.DEV_AUTH_BYPASS !== '1') return null;
+  // 쿼리스트링이 우선. 이후 API 호출에는 쿼리가 없으므로 쿠키에 남겨둔 값을 쓴다.
+  const fromQuery = String(request.query.devRole ?? '');
+  if ((ROLES as string[]).includes(fromQuery)) return fromQuery as RoleKey;
+  const fromCookie = /(?:^|;\s*)dev_role=([^;]+)/.exec(request.headers.cookie ?? '')?.[1] ?? '';
+  return (ROLES as string[]).includes(fromCookie) ? (fromCookie as RoleKey) : null;
+}
+
 function escapeHtml(value: unknown): string {
   return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
@@ -196,6 +225,11 @@ async function createSession(db: Pool, userId: number, ip: string): Promise<stri
 type ActiveSession = { userId: number; historyId: number; expiresAt: number; noticeShown: boolean };
 
 async function authenticateSession(db: Pool, request: express.Request): Promise<ActiveSession | null> {
+  // ── 임시 개발용 로그인 우회 (시작) ─────────────────────────────────────────
+  // ⚠️ 로그인 시스템을 켜거나 운영에 배포하기 전에 이 3줄을 삭제할 것.
+  //    이게 켜져 있으면 /app/api/* 전체가 인증 없이 열린다.
+  if (devBypassRole(request)) return { userId: 0, historyId: 0, expiresAt: Date.now() + 20 * 60 * 1000, noticeShown: true };
+  // ── 임시 개발용 로그인 우회 (끝) ───────────────────────────────────────────
   const token = readSessionToken(request.headers.cookie);
   if (!token) return null;
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
@@ -258,7 +292,8 @@ function renderAuthPage(params: { mode: 'login' | 'register'; districts: Array<{
   .district-results.open{display:block}
   .district-result{display:block;width:100%;border:0;background:transparent;padding:10px 14px;text-align:left;font:inherit;font-size:16px;color:var(--color-text);cursor:pointer}
   .district-result:hover,.district-result:focus-visible{background:color-mix(in srgb,var(--color-accent) 12%,transparent);color:var(--color-accent-800);outline:0}
-  .district-empty{padding:12px 14px;font-family:var(--font-sans);font-size:13px;color:var(--ink-62)}
+  .district-empty{padding:12px 14px;font-family:var(--font-sans);font-size:13px;line-height:1.65;color:var(--ink-70)}
+  .district-empty b{display:block;margin-bottom:2px;font-weight:600;color:var(--color-text)}
   .remember{display:flex;align-items:center;gap:9px;margin-top:2px;font-family:var(--font-sans);font-size:13.5px;color:var(--ink-72);cursor:pointer}
   .remember input{width:15px;height:15px;margin:0;accent-color:var(--color-accent)}
   .client-error{display:none}.client-error.open{display:block}
@@ -269,7 +304,7 @@ function renderAuthPage(params: { mode: 'login' | 'register'; districts: Array<{
   </style></head><body><div class="shell"><header><div class="masthead"><a class="auth-brand" href="/" aria-label="리포트온 홈"><span class="mark">R</span><span>리포트온</span></a><span class="masthead-tag">지자체 보고·결재 예약관리</span></div><div class="rule-a"></div><div class="rule-b"></div></header><main class="split"><section class="intro"><p class="kicker">${isRegister ? 'Create account' : 'Sign in'}</p><h1>${isRegister ? '사용자 계정 만들기' : '보고·결재 예약관리'}</h1><p class="intro-lead">${isRegister ? '소속 지자체와 업무 역할을 등록해 주세요.' : '지자체와 역할을 선택한 뒤 로그인해 주세요.'}</p><p class="intro-meta">${isRegister ? '요청자·부서장 계정은 직접 등록<br>그 외 역할은 관리자가 발급' : '지자체별 독립 운영 · 역할 기반 권한<br>실시간 상태 확인'}</p></section><form method="post" action="${isRegister ? '/app/register' : '/app/login'}">${params.error ? `<div class="error">${escapeHtml(params.error)}</div>` : ''}
   ${isRegister ? `<div class="field"><label for="name">이름</label><input id="name" name="name" required maxlength="100" value="${escapeHtml(values.name)}"><div class="validation"></div></div>` : ''}
   <div class="field"><label for="districtSearch">지자체</label><input id="districtSearch" type="text" autocomplete="off" placeholder="3글자 이상 입력해 주세요" value="${escapeHtml(selectedDistrict?.fullName)}" required><input id="districtSeq" name="districtSeq" type="hidden" value="${escapeHtml(values.districtSeq)}"><div class="district-results" id="districtResults"></div><div class="validation" id="districtValidation"></div></div>
-  ${isRegister ? `<script>const registerDistricts=${JSON.stringify(params.districts).replaceAll('<', '\\u003c')};const registerSearch=document.getElementById('districtSearch');const registerHidden=document.getElementById('districtSeq');const registerResults=document.getElementById('districtResults');function closeRegisterDistricts(){registerResults.classList.remove('open')}function renderRegisterDistricts(){const query=registerSearch.value.trim().toLowerCase();registerHidden.value='';if(query.length<3){closeRegisterDistricts();return}const matches=registerDistricts.filter(item=>item.fullName.toLowerCase().includes(query)).slice(0,30);registerResults.innerHTML=matches.length?matches.map(item=>'<button type="button" class="district-result" data-seq="'+item.seq+'">'+item.fullName.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</button>').join(''):'<div class="district-empty">일치하는 지자체가 없습니다.</div>';registerResults.classList.add('open');registerResults.querySelectorAll('button').forEach(button=>button.onclick=()=>{const item=registerDistricts.find(d=>String(d.seq)===button.dataset.seq);registerSearch.value=item.fullName;registerHidden.value=String(item.seq);closeRegisterDistricts()})}registerSearch.addEventListener('input',renderRegisterDistricts);registerSearch.addEventListener('focus',renderRegisterDistricts);document.addEventListener('click',event=>{if(!registerResults.parentElement.contains(event.target))closeRegisterDistricts()});registerSearch.form.addEventListener('submit',event=>{if(!registerHidden.value){event.preventDefault();renderRegisterDistricts();registerSearch.focus()}});</script>` : ''}
+  ${isRegister ? `<script>const registerDistricts=${JSON.stringify(params.districts).replaceAll('<', '\\u003c')};const registerSearch=document.getElementById('districtSearch');const registerHidden=document.getElementById('districtSeq');const registerResults=document.getElementById('districtResults');function closeRegisterDistricts(){registerResults.classList.remove('open')}function renderRegisterDistricts(){const query=registerSearch.value.trim().toLowerCase();registerHidden.value='';if(query.length<3){closeRegisterDistricts();return}const matches=registerDistricts.filter(item=>item.fullName.toLowerCase().includes(query)).slice(0,30);registerResults.innerHTML=matches.length?matches.map(item=>'<button type="button" class="district-result" data-seq="'+item.seq+'">'+item.fullName.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</button>').join(''):'<div class="district-empty"><b>일치하는 지자체가 없습니다.</b>시·도 또는 시·군·구 이름으로 다시 검색해 주세요. (예: 강남구, 서울특별시)<br>아직 등록되지 않은 지자체라면 <a href="mailto:kimch@monorama.kr">kimch@monorama.kr</a> 로 문의해 주세요.</div>';registerResults.classList.add('open');registerResults.querySelectorAll('button').forEach(button=>button.onclick=()=>{const item=registerDistricts.find(d=>String(d.seq)===button.dataset.seq);registerSearch.value=item.fullName;registerHidden.value=String(item.seq);closeRegisterDistricts()})}registerSearch.addEventListener('input',renderRegisterDistricts);registerSearch.addEventListener('focus',renderRegisterDistricts);document.addEventListener('click',event=>{if(!registerResults.parentElement.contains(event.target))closeRegisterDistricts()});registerSearch.form.addEventListener('submit',event=>{if(!registerHidden.value){event.preventDefault();renderRegisterDistricts();registerSearch.focus()}});</script>` : ''}
   <div class="field"><label for="role">역할</label><select id="role" name="role" required><option value="">선택하세요</option>${roleOptions(values.role, isRegister)}</select><div class="validation" id="roleValidation"></div></div>
   <div class="field"><label for="email">이메일</label><input id="email" name="email" type="email" autocomplete="username" required value="${escapeHtml(values.email)}"><div class="validation" id="emailValidation"></div></div>
   <div class="field"><label for="password">비밀번호</label><input id="password" name="password" type="password" autocomplete="${isRegister ? 'new-password' : 'current-password'}" required minlength="8"><div class="validation" id="passwordValidation">${isRegister ? '영문 대문자·소문자, 숫자, 특수문자를 포함하여 8자리 이상 입력해 주세요.' : ''}</div></div>
@@ -277,7 +312,7 @@ function renderAuthPage(params: { mode: 'login' | 'register'; districts: Array<{
   ${isRegister ? '' : `<script>const loginDistrict=document.getElementById('districtSearch');const loginDistrictId=document.getElementById('districtSeq');const loginRole=document.getElementById('role');const loginEmail=document.getElementById('email');const loginPassword=document.getElementById('password');function showLoginError(input,output,message){input.classList.add('invalid');output.className='validation bad';output.textContent=message}loginDistrict.addEventListener('invalid',event=>{event.preventDefault();showLoginError(loginDistrict,districtValidation,'지자체를 검색한 후 목록에서 선택해 주세요.')});loginRole.addEventListener('invalid',event=>{event.preventDefault();showLoginError(loginRole,roleValidation,'역할을 선택해 주세요.')});loginEmail.addEventListener('invalid',event=>{event.preventDefault();showLoginError(loginEmail,emailValidation,loginEmail.value?'올바른 이메일 형식으로 입력해 주세요.':'이메일을 입력해 주세요.')});loginPassword.addEventListener('invalid',event=>{event.preventDefault();showLoginError(loginPassword,passwordValidation,'비밀번호를 입력해 주세요.')});loginDistrict.addEventListener('input',()=>{districtValidation.textContent='';loginDistrict.classList.remove('invalid')});loginRole.addEventListener('change',()=>{roleValidation.textContent='';loginRole.classList.remove('invalid')});loginEmail.addEventListener('input',()=>{emailValidation.textContent='';loginEmail.classList.remove('invalid')});loginPassword.addEventListener('input',()=>{passwordValidation.textContent='';loginPassword.classList.remove('invalid')});loginPassword.form.addEventListener('submit',event=>{if(!loginDistrictId.value){event.preventDefault();showLoginError(loginDistrict,districtValidation,'지자체를 검색한 후 목록에서 선택해 주세요.');loginDistrict.focus()}});</script>`}
   ${isRegister ? '' : `<label class="remember"><input id="rememberLogin" type="checkbox"> 지자체, 역할, 이메일 저장</label><script>try{const saved=JSON.parse(localStorage.getItem('appRememberedLogin')||'null');if(saved){rememberLogin.checked=true;if(!districtSeq.value){districtSeq.value=saved.districtSeq||'';districtSearch.value=saved.districtName||''}if(!role.value)role.value=saved.role||'';if(!email.value)email.value=saved.email||''}}catch{}document.currentScript.closest('form').addEventListener('submit',()=>{try{if(rememberLogin.checked)localStorage.setItem('appRememberedLogin',JSON.stringify({districtSeq:districtSeq.value,districtName:districtSearch.value,role:role.value,email:email.value}));else localStorage.removeItem('appRememberedLogin')}catch{}})</script>`}
   ${isRegister ? '' : `<div class="client-error" id="loginClientError" role="alert"></div><script>const loginForm=document.getElementById('password').form;loginForm.noValidate=true;loginForm.addEventListener('submit',event=>{const errors=[];if(!document.getElementById('districtSeq').value){errors.push('지자체를 검색 결과에서 선택해 주세요.');showLoginError(loginDistrict,districtValidation,errors.at(-1))}if(!loginRole.value){errors.push('역할을 선택해 주세요.');showLoginError(loginRole,roleValidation,errors.at(-1))}if(!loginEmail.value){errors.push('이메일을 입력해 주세요.');showLoginError(loginEmail,emailValidation,errors.at(-1))}else if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(loginEmail.value)){errors.push('올바른 이메일 형식으로 입력해 주세요.');showLoginError(loginEmail,emailValidation,errors.at(-1))}if(!loginPassword.value){errors.push('비밀번호를 입력해 주세요.');showLoginError(loginPassword,passwordValidation,errors.at(-1))}if(errors.length){event.preventDefault();loginClientError.textContent=errors[0];loginClientError.classList.add('open');return}loginClientError.classList.remove('open')},true);</script>`}
-  <button class="btn btn-primary btn-block" type="submit">${isRegister ? '회원가입' : '로그인'}</button><p class="foot">${isRegister ? '이미 계정이 있나요? <a href="/app">로그인</a>' : '계정이 없나요? <a href="/app/register">회원가입</a>'}</p></form></main></div>${isRegister ? '' : `<script>const districts=${JSON.stringify(params.districts).replaceAll('<', '\\u003c')};const search=document.getElementById('districtSearch');const hidden=document.getElementById('districtSeq');const results=document.getElementById('districtResults');function closeResults(){results.classList.remove('open')}function renderResults(){const query=search.value.trim().toLowerCase();hidden.value='';if(query.length<3){closeResults();return}const matches=districts.filter(item=>item.fullName.toLowerCase().includes(query)).slice(0,30);results.innerHTML=matches.length?matches.map(item=>'<button type="button" class="district-result" data-seq="'+item.seq+'">'+item.fullName.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</button>').join(''):'<div class="district-empty">일치하는 지자체가 없습니다.</div>';results.classList.add('open');results.querySelectorAll('button').forEach(button=>button.onclick=()=>{const item=districts.find(d=>String(d.seq)===button.dataset.seq);search.value=item.fullName;hidden.value=String(item.seq);closeResults()})}search.addEventListener('input',renderResults);search.addEventListener('focus',renderResults);document.addEventListener('click',event=>{if(!results.parentElement.contains(event.target))closeResults()});search.form.addEventListener('submit',event=>{if(!hidden.value){event.preventDefault();renderResults();search.focus()}});</script>`}</body></html>`;
+  <button class="btn btn-primary btn-block" type="submit">${isRegister ? '회원가입' : '로그인'}</button><p class="foot">${isRegister ? '이미 계정이 있나요? <a href="/app">로그인</a>' : '계정이 없나요? <a href="/app/register">회원가입</a>'}</p></form></main></div>${isRegister ? '' : `<script>const districts=${JSON.stringify(params.districts).replaceAll('<', '\\u003c')};const search=document.getElementById('districtSearch');const hidden=document.getElementById('districtSeq');const results=document.getElementById('districtResults');function closeResults(){results.classList.remove('open')}function renderResults(){const query=search.value.trim().toLowerCase();hidden.value='';if(query.length<3){closeResults();return}const matches=districts.filter(item=>item.fullName.toLowerCase().includes(query)).slice(0,30);results.innerHTML=matches.length?matches.map(item=>'<button type="button" class="district-result" data-seq="'+item.seq+'">'+item.fullName.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')+'</button>').join(''):'<div class="district-empty"><b>일치하는 지자체가 없습니다.</b>시·도 또는 시·군·구 이름으로 다시 검색해 주세요. (예: 강남구, 서울특별시)<br>아직 등록되지 않은 지자체라면 <a href="mailto:kimch@monorama.kr">kimch@monorama.kr</a> 로 문의해 주세요.</div>';results.classList.add('open');results.querySelectorAll('button').forEach(button=>button.onclick=()=>{const item=districts.find(d=>String(d.seq)===button.dataset.seq);search.value=item.fullName;hidden.value=String(item.seq);closeResults()})}search.addEventListener('input',renderResults);search.addEventListener('focus',renderResults);document.addEventListener('click',event=>{if(!results.parentElement.contains(event.target))closeResults()});search.form.addEventListener('submit',event=>{if(!hidden.value){event.preventDefault();renderResults();search.focus()}});</script>`}</body></html>`;
 }
 
 async function loadDistrictOptions(db: Pool): Promise<Array<{ seq: number; fullName: string }>> {
@@ -693,6 +728,26 @@ export function registerUserRoutes(app: express.Express, db: Pool): void {
     response.json({message:'사용자 정보가 수정되었습니다.'});
   });
   app.get('/app', async (request, response) => {
+    // ── 임시 개발용 로그인 우회 (시작) ───────────────────────────────────────
+    // ⚠️ 로그인 시스템을 켜거나 운영에 배포하기 전에 이 블록을 통째로 삭제할 것.
+    //    함께 삭제할 것: 파일 상단의 devBypassRole() 함수.
+    const devRole = devBypassRole(request);
+    if (devRole) {
+      // 이후 API 호출이 역할을 알 수 있도록 쿠키에 남긴다.
+      response.cookie(DEV_ROLE_COOKIE, devRole, { httpOnly: true, sameSite: 'lax', path: '/' });
+      const devUser = { id: 0, name: '테스트 사용자', districtSeq: 1, districtName: '테스트 지자체' };
+      const devExpiresAt = Date.now() + 20 * 60 * 1000;
+      if (devRole === 'requester') {
+        const devWorkspace = await loadRequesterWorkspace(db, devUser.id);
+        response.send(renderRequesterPage(devUser.name, devUser.districtName, devExpiresAt, null, devWorkspace.requests, devWorkspace.notices));
+        return;
+      }
+      const devStats = await loadDashboardStats(db, devRole, devUser.id, devUser.districtSeq);
+      const devLists = await loadDashboardLists(db, devRole, devUser.id, devUser.districtSeq);
+      response.send(renderUserPage(devRole, escapeHtml(devUser.name), escapeHtml(devUser.districtName), devExpiresAt, null, devStats, devLists.tasks, devLists.events));
+      return;
+    }
+    // ── 임시 개발용 로그인 우회 (끝) ─────────────────────────────────────────
     const session = await authenticateSession(db, request);
     if (!session) { response.clearCookie(USER_COOKIE, { path: '/' }); response.clearCookie(USER_COOKIE, { path: '/app' }); response.send(renderAuthPage({ mode: 'login', districts: await loadDistrictOptions(db), error: request.query.expired ? '세션이 만료되어 로그아웃되었습니다.' : undefined })); return; }
     response.cookie(USER_COOKIE, readSessionToken(request.headers.cookie), { httpOnly: true, sameSite: 'lax', maxAge: 20 * 60 * 1000, path: '/' });

@@ -45,10 +45,13 @@ export const themeFormCss = `
    (칸 높이 = 라벨 + 6 + 입력 + 6 + 안내문 17 이므로, 16px 를 빼면 입력 바로 아래). */
 .field{display:grid;gap:6px;position:relative}
 .field label{font-family:var(--font-sans);font-size:13px;font-weight:500;letter-spacing:.01em;color:var(--ink-72)}
-.field input,.field select{width:100%;font-family:var(--font-body);font-size:17px;color:var(--color-text);background:transparent;border:0;border-bottom:1px solid color-mix(in srgb,var(--color-text) 28%,transparent);border-radius:0;padding:9px 0;outline:0;transition:border-color .15s,box-shadow .15s}
+/* 밑줄은 입력칸의 유일한 경계라 WCAG 1.4.11(비텍스트 대비 3:1)이 적용된다.
+   디자인 원본값 28% 는 종이 바탕에서 1.78:1 로 미달이라, 3:1 을 넘기는 최소선인 50% 로 올렸다
+   (원본이 hover 에 쓰던 값과 같다). 되돌리려면 이 줄의 50% 를 28% 로 바꾸면 된다. */
+.field input,.field select{width:100%;font-family:var(--font-body);font-size:17px;color:var(--color-text);background:transparent;border:0;border-bottom:1px solid color-mix(in srgb,var(--color-text) 50%,transparent);border-radius:0;padding:9px 0;outline:0;transition:border-color .15s,box-shadow .15s}
 .field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--color-accent) 50%),linear-gradient(135deg,var(--color-accent) 50%,transparent 50%);background-position:right 7px center,right 1px center;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:22px}
 .field input::placeholder{color:var(--ink-65);opacity:1}
-.field input:hover,.field select:hover{border-color:color-mix(in srgb,var(--color-text) 50%,transparent)}
+.field input:hover,.field select:hover{border-color:color-mix(in srgb,var(--color-text) 72%,transparent)}
 .field input:focus,.field select:focus{border-color:var(--color-accent);box-shadow:0 1px 0 0 var(--color-accent)}
 .field input.valid{border-color:var(--color-accent);box-shadow:0 1px 0 0 var(--color-accent)}
 .field input.invalid,.field select.invalid{border-color:var(--color-accent-2-700);box-shadow:0 1px 0 0 var(--color-accent-2-700)}
