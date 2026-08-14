@@ -1,3 +1,5 @@
+import { themeCss, themeFontLinks } from './theme';
+
 export function renderHomePage(): string {
   return `<!doctype html>
 <html lang="ko">
@@ -7,31 +9,14 @@ export function renderHomePage(): string {
   <meta name="description" content="지자체 보고·결재 요청과 결정권자 일정을 하나로 연결하는 업무관리 서비스">
   <title>리포트온 | 지자체 보고·결재 예약관리</title>
   <link rel="icon" href="/favicon.ico">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Noto+Serif+KR:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
-  <style>
-    :root{--color-bg:#f3f2f2;--color-surface:#eae9e9;--color-text:#201e1d;--color-accent:#0088b0;--color-accent-700:#006786;--color-accent-800:#004961;--color-accent-900:#0a303e;--color-accent-2-700:#aa0b56;--radius-md:2px;--font-heading:"Source Serif 4","Noto Serif KR",serif;--font-body:"Source Serif 4","Noto Serif KR",serif;--font-sans:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",sans-serif;--font-heading-weight:600}
-    :root{--ink-80:color-mix(in srgb,var(--color-text) 80%,transparent);--ink-78:color-mix(in srgb,var(--color-text) 78%,transparent);--ink-72:color-mix(in srgb,var(--color-text) 72%,transparent);--ink-70:color-mix(in srgb,var(--color-text) 70%,transparent);--ink-65:color-mix(in srgb,var(--color-text) 65%,transparent);--ink-62:color-mix(in srgb,var(--color-text) 62%,transparent)}
-    *,*::before,*::after{box-sizing:border-box}html{scroll-behavior:smooth}
-    body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);font-size:17px;line-height:1.78;word-break:keep-all;text-wrap:pretty;-webkit-font-smoothing:antialiased}
-    h1,h2,h3{margin:0;font-family:var(--font-heading);font-weight:var(--font-heading-weight)}p{margin:0}
-    /* 본문 텍스트 역할은 accent-700부터 시작한다 — accent(#0088b0)는 종이 바탕에서 3.6:1이라 작은 글씨 기준(4.5:1)에 못 미친다.
-       accent는 24px 이상 표시용(수치, 헤드라인 강조)과 로고 마크에만 남긴다. */
-    a{color:var(--color-accent-700);text-decoration:none;text-underline-offset:3px}a:not(.btn):hover{color:var(--color-accent-800)}
-    :focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}::selection{background:color-mix(in srgb,var(--color-accent) 30%,transparent)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:17px;line-height:1.2;padding:16px 30px;background:transparent;border:1px solid transparent;border-radius:var(--radius-md)}
-    .btn-primary{background:var(--color-accent-700);color:var(--color-bg)}.btn-primary:hover{background:var(--color-accent-800);color:var(--color-bg)}.btn-primary:active{background:var(--color-accent-900)}
-    .btn-ghost{color:var(--color-accent-700);padding:16px 8px}.btn-ghost:hover{background:color-mix(in srgb,var(--color-accent) 10%,transparent)}
-    .btn-sm{font-size:15px;padding:11px 20px}.btn-block{width:100%;margin-top:36px}
+  ${themeFontLinks}
+  <style>${themeCss}
     .nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:30px;background:var(--color-bg);padding:15px max(40px,calc((100% - 1240px) / 2 + 40px))}
     .nav-brand{display:flex;align-items:baseline;gap:12px;margin-right:auto;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:20px;color:var(--color-text)}
-    .nav-mark{display:inline-grid;place-items:center;width:26px;height:26px;background:var(--color-accent);color:var(--color-bg);font-size:15px;transform:translateY(4px)}
+    .nav-mark{width:26px;height:26px;font-size:15px;transform:translateY(4px)}
     .nav-sub{font-family:var(--font-sans);font-size:12px;font-weight:500;letter-spacing:.1em;color:var(--ink-65)}
     .nav-link{color:var(--color-text);font-size:15px;white-space:nowrap}.nav .btn{white-space:nowrap}
     .sec{max-width:1240px;margin:0 auto;padding:0 40px}.sec-gap{padding-top:132px}
-    .kicker{margin:0;font-family:var(--font-sans);font-weight:500;font-size:12.5px;line-height:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent-700)}.kicker-head{margin-bottom:44px}
     .h2{font-size:clamp(32px,4.4vw,56px);line-height:1.14;letter-spacing:-.02em}
     .sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr);gap:24px 80px;align-items:end}.sec-head p{font-size:17px;color:var(--ink-78)}
     .hero{padding-top:104px;padding-bottom:56px}.hero .kicker{margin-bottom:40px}
@@ -76,7 +61,7 @@ export function renderHomePage(): string {
     .price{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:56px clamp(40px,6vw,96px);align-items:center}
     .price .kicker{margin-bottom:40px}.price h2{font-size:clamp(30px,3.8vw,48px);line-height:1.16;letter-spacing:-.02em}
     .price-lead{max-width:46ch;margin-top:28px;font-size:17px;color:var(--ink-78)}
-    .price-card{background:var(--color-surface);padding:clamp(28px,3.4vw,48px)}
+    .price-card{background:var(--color-surface);padding:clamp(28px,3.4vw,48px)}.price-card .btn-block{margin-top:36px}
     .price-main{display:flex;align-items:baseline;gap:12px;margin-top:26px}
     .price-amount{font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:clamp(40px,4.4vw,58px);line-height:1;letter-spacing:-.025em}
     .price-unit{font-size:17px;color:var(--ink-70)}.price-setup{margin-top:20px;font-size:16px;color:var(--ink-78)}
@@ -87,7 +72,7 @@ export function renderHomePage(): string {
     .cta p{max-width:52ch;margin-top:32px;font-size:19px;color:var(--ink-80)}.cta-act{margin-top:44px}
     .footer{max-width:1240px;margin:0 auto;padding:96px 40px 72px;display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) minmax(0,auto);gap:36px;align-items:start;font-family:var(--font-sans);font-size:14px;color:var(--ink-70)}
     .footer-brand{display:flex;align-items:center;gap:10px;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:18px;color:var(--color-text)}
-    .footer-mark{display:inline-grid;place-items:center;width:24px;height:24px;background:var(--color-accent);color:var(--color-bg);font-size:14px}
+    .footer-mark{width:24px;height:24px;font-size:14px}
     .footer-co{display:flex;flex-wrap:wrap;gap:8px 22px;line-height:1.7}
     .footer-co strong{width:100%;font-family:var(--font-heading);font-size:16px;color:var(--color-text)}
     .footer-legal{text-align:right;white-space:nowrap;line-height:1.7;color:var(--ink-65)}
@@ -101,7 +86,7 @@ export function renderHomePage(): string {
 </head>
 <body>
   <nav class="nav">
-    <a class="nav-brand" href="/" aria-label="리포트온 홈"><span class="nav-mark">R</span><span>리포트온</span><span class="nav-sub">보고·결재 예약관리</span></a>
+    <a class="nav-brand" href="/" aria-label="리포트온 홈"><span class="mark nav-mark">R</span><span>리포트온</span><span class="nav-sub">보고·결재 예약관리</span></a>
     <a class="nav-link" href="#benefit">도입 효과</a>
     <a class="nav-link" href="#flow">업무 흐름</a>
     <a class="nav-link" href="#feature">주요 기능</a>
@@ -240,7 +225,7 @@ export function renderHomePage(): string {
   </main>
 
   <footer class="footer">
-    <span class="footer-brand"><span class="footer-mark">R</span><span>리포트온</span></span>
+    <span class="footer-brand"><span class="mark footer-mark">R</span><span>리포트온</span></span>
     <div class="footer-co">
       <strong>(주)모노라마</strong>
       <span>대표 김창호</span>
