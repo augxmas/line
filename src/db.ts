@@ -6,6 +6,7 @@ export type DbConfig = {
   user: string;
   password: string;
   database: string;
+  connectionLimit?: number;
 };
 
 export function createPool(config: DbConfig) {
@@ -17,7 +18,10 @@ export function createPool(config: DbConfig) {
     database: config.database,
     dateStrings: true,
     waitForConnections: true,
-    connectionLimit: 10,
+    connectionLimit: config.connectionLimit ?? 3,
+    maxIdle: Math.min(config.connectionLimit ?? 3, 2),
+    idleTimeout: 60_000,
+    queueLimit: 0,
     enableKeepAlive: true,
   });
 }

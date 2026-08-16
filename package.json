@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@types/multer": "^2.2.0",
+    "@types/web-push": "^3.6.4",
     "@types/ws": "^8.18.1",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
@@ -19,6 +20,7 @@
     "multer": "^2.2.0",
     "mysql2": "^3.14.3",
     "nodemailer": "^9.0.5",
+    "web-push": "^3.6.7",
     "ws": "^8.21.3"
   },
   "devDependencies": {

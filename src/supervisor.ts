@@ -389,7 +389,7 @@ function renderLoginPage(errorMessage?: string): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Supervisor Login</title>
+  <title>대면 결재 Line 관리</title>
   <style>
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
@@ -588,7 +588,7 @@ function renderDashboardPage(params: {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Supervisor Console</title>
+  <title>대면 결재 Line 관리</title>
   <style>
     :root {
       color-scheme: light;
@@ -729,7 +729,41 @@ function renderDashboardPage(params: {
       flex-direction: column;
     }
     #tab-codes.active { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+    #tab-notices.active { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+    #tab-settlement.active { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; }
     #tab-codes > .card.full-span { display: flex; flex: 1 1 auto; min-height: 0; flex-direction: column; }
+    #tab-notices > .card.full-span { display: flex; flex: 1 1 auto; min-height: 0; width: 100%; flex-direction: column; overflow: hidden; }
+    #noticeToolbar { flex: 0 0 auto; display: grid; grid-template-columns: minmax(360px, 1fr) auto; align-items: end; gap: 14px; width: 100%; min-height: 0; margin: 0 0 8px; }
+    #noticeToolbar .notice-district-condition { min-width: 0; }
+    #noticeToolbar .notice-district-condition .code-district-search { flex: 0 0 auto; width: 100%; }
+    #noticeToolbar .notice-toolbar-actions { display: flex; align-items: flex-end; justify-content: flex-end; gap: 10px; min-width: 0; }
+    #noticeToolbar .notice-keyword-condition { width: 380px; min-width: 260px; }
+    #noticeToolbar .notice-toolbar-actions > button { flex: 0 0 auto; height: 42px; }
+    #noticeToolbar #openNoticeCreate { margin-left: 0; }
+    #tab-notices #noticeSummary { flex: 0 0 auto; grid-column: auto; grid-row: auto; margin: 0 0 8px; }
+    #tab-notices > .card > .grid-table-wrap { flex: 1 1 auto; min-height: 0; overflow: auto; max-height: none !important; }
+    #noticeForm { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    #noticeForm .notice-title-field input { width: 100%; height: 46px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text); font: inherit; outline: none; }
+    #noticeForm .notice-title-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47, 102, 224, .12); }
+    #noticeForm .notice-options-row { display: flex; align-items: center; gap: 28px; min-height: 42px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #f8fafc; }
+    #noticeForm .notice-check { display: inline-flex; align-items: center; gap: 9px; margin: 0; color: var(--text); font-weight: 700; cursor: pointer; }
+    #noticeForm .notice-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+    #noticePopupPeriod { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    #noticePopupPeriod[hidden] { display: none; }
+    #tab-settlement > .card.full-span { display: flex; flex: 1 1 auto; min-height: 0; width: 100%; flex-direction: column; overflow: hidden; }
+    #tab-settlement .code-district-toolbar,
+    #tab-settlement > .card > .message,
+    #tab-settlement .settlement-grid-toolbar { flex: 0 0 auto; }
+    #settlementGridWrap { flex: 1 1 auto; min-height: 0; overflow: auto; }
+    #settlementContractSummary { flex: 0 0 auto; margin: 0; font-weight: 700; white-space: nowrap; }
+    .settlement-grid-toolbar { display: flex; align-items: center; flex-wrap: nowrap; gap: 16px; margin: 12px 0; }
+    #settlementAmountSummary { flex: 0 0 auto; min-width: 0; margin: 0; white-space: nowrap; }
+    #downloadSettlementExcel { flex: 0 0 auto; margin-left: auto; }
+    #settlementGridWrap input[type="date"] { min-width: 145px; padding: 7px 9px; }
+    #settlementGridWrap .numeric-only { width: 110px; padding: 7px 9px; text-align: right; }
+    #settlementGridWrap .installment-input { width: 64px; }
+    #settlementGridWrap input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+    #settlementGridWrap td:nth-child(3), #settlementGridWrap td:nth-child(6), #settlementGridWrap td:nth-child(9), #settlementGridWrap td:last-child { text-align: center; }
     #tab-codes .code-sticky-head {
       position: relative;
       flex: 0 0 auto;
@@ -781,13 +815,17 @@ function renderDashboardPage(params: {
     .code-subpanel .code-form > .field-grid { grid-column: 1; grid-row: 1; margin: 0; }
     .code-subpanel .code-form > .actions { grid-column: 2; grid-row: 1; align-self: end; flex-direction: row; align-items: center; margin: 0; }
     .code-subpanel .code-form > .actions button { height: 46px; min-width: 92px; }
-    .code-subpanel .code-form > .helper { grid-column: 1 / -1; grid-row: 2; margin: 0; }
+    .code-subpanel .code-form > .helper { grid-column: 1; grid-row: 2; margin: 0; }
+    .code-subpanel .code-form > #codeMessage { grid-column: 2; grid-row: 2; justify-self: end; margin: 0; text-align: right; white-space: nowrap; }
     @media (max-width: 760px) {
       .code-subpanel .code-form { grid-template-columns: 1fr; }
       .code-subpanel .code-form > .actions { grid-column: 1; grid-row: 2; justify-content: flex-end; }
       .code-subpanel .code-form > .helper { grid-row: 3; }
+      .code-subpanel .code-form > #codeMessage { grid-column: 1; grid-row: 4; }
     }
     @media (max-width: 900px) { .code-district-toolbar { flex-wrap: wrap; }.code-district-search { flex: 1 1 320px; }.code-district-toolbar .helper { flex-basis: 100%; white-space: normal; } }
+    @media (max-width: 1150px) { #noticeToolbar { grid-template-columns: 1fr; } #noticeToolbar .notice-toolbar-actions { justify-content: flex-start; flex-wrap: wrap; } #noticeToolbar .notice-keyword-condition { flex: 1 1 300px; width: auto; } }
+    @media (max-width: 720px) { #noticePopupPeriod { grid-template-columns: 1fr; } #noticeForm .notice-options-row { align-items: flex-start; flex-direction: column; gap: 12px; } }
     #tab-basic > .grid {
       flex: 1 1 auto;
       min-height: 0;
@@ -843,7 +881,7 @@ function renderDashboardPage(params: {
     .field[hidden] { display: none; }
     .field.full { grid-column: 1 / -1; }
     label { color: #222222; font-size: 0.95rem; }
-    select, input[type='text'], input[type='date'], input[type='email'], input[type='tel'] {
+    select, input[type='text'], input[type='date'], input[type='datetime-local'], input[type='email'], input[type='tel'] {
       width: 100%;
       border-radius: 10px;
       border: 1px solid var(--line);
@@ -973,6 +1011,7 @@ function renderDashboardPage(params: {
     tr:hover td {
       background: #f8fbff;
     }
+    .toggle-code { width: 88px; text-align: center; }
     .columns-compact th, .columns-compact td { padding: 7px 8px; white-space: nowrap; }
     .align-left { text-align: left; }
     .align-center { text-align: center; }
@@ -1079,6 +1118,8 @@ function renderDashboardPage(params: {
     }
     .modal-footer .save { background: #000; }
     .modal-footer .message { min-height: 18px; }
+    .modal-footer.notice-confirm-footer { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 10px; }
+    .modal-footer.notice-confirm-footer button { flex: 0 0 auto; width: auto; min-width: 92px; }
     #fieldConfigModal th, #fieldConfigModal td { padding: 6px 9px; }
     #fieldConfigModal .field-config-name { padding: 6px 8px; }
     #fieldConfigModal .save { padding: 8px 14px; }
@@ -1114,6 +1155,24 @@ function renderDashboardPage(params: {
       .view-buttons { grid-column: 1; grid-row: 2; justify-content: flex-end; }
       .grid-summary { grid-row: 3; }
     }
+    button {
+      background-color: #000000 !important;
+      border-color: #000000 !important;
+      color: #ffffff !important;
+    }
+    button:hover:not(:disabled) { background-color: #222222 !important; }
+    button:disabled { background-color: #000000 !important; color: #ffffff !important; opacity: .35; cursor: not-allowed; }
+    .main-tabs .tab {
+      background-color: #e5e7eb !important;
+      border-color: #e5e7eb !important;
+      color: #222222 !important;
+    }
+    .main-tabs .tab:hover:not(.active) { background-color: #d5d8dd !important; }
+    .main-tabs .tab.active {
+      background-color: #000000 !important;
+      border-color: #000000 !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -1133,6 +1192,8 @@ function renderDashboardPage(params: {
     <nav class="main-tabs" aria-label="기본 메뉴">
       <button class="tab active" type="button" data-main-tab="basic">기본사항</button>
       <button class="tab" type="button" data-main-tab="codes">기본코드</button>
+      <button class="tab" type="button" data-main-tab="notices">공지사항</button>
+      <button class="tab" type="button" data-main-tab="settlement">정산</button>
     </nav>
 
     <section class="tab-panel active" id="tab-basic">
@@ -1278,16 +1339,45 @@ function renderDashboardPage(params: {
         <div class="code-sticky-head">
         <div class="code-district-toolbar">
           <label for="codeDistrictSearch">지자체</label>
-          <div class="code-district-search"><input id="codeDistrictSearch" type="text" autocomplete="off" placeholder="3글자 이상 입력해 주세요" value="${escapeAttribute(params.selectedDistrict.full_name)}"><input id="codeDistrictSeq" type="hidden" value="${params.selectedDistrict.seq}"><div class="code-district-results" id="codeDistrictResults"></div></div>
+          <div class="code-district-search"><input id="codeDistrictSearch" type="text" autocomplete="off" placeholder="3글자 이상 입력해 주세요" value=""><input id="codeDistrictSeq" type="hidden" value=""><div class="code-district-results" id="codeDistrictResults"></div></div>
           <div class="helper">선택한 지자체에서 사용할 부서, 팀, 직위, 직책 기준정보를 관리합니다.</div>
         </div>
-        <div id="codeMessage" class="message"></div>
         <nav class="code-subtabs" aria-label="기본코드 구분"><button type="button" class="code-subtab active" data-code-tab="department">부서</button><button type="button" class="code-subtab" data-code-tab="team">팀</button><button type="button" class="code-subtab" data-code-tab="jobPosition">직위</button><button type="button" class="code-subtab" data-code-tab="position">직책</button></nav>
         </div>
-        <div class="code-subpanel active" data-code-panel="department"><section class="card"><h2 class="card-title">부서 관리</h2><form class="code-form" data-code-type="department"><input type="hidden" name="id"><div class="field"><label>부서명</label><input name="name" required maxlength="100"></div><div class="helper">코드는 저장 시 자동 생성됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button></div></form><div class="grid-table-wrap"><table><thead><tr><th>코드</th><th>부서명</th><th>상태</th><th>관리</th></tr></thead><tbody id="departmentCodeBody"></tbody></table></div></section></div>
-        <div class="code-subpanel" data-code-panel="team"><section class="card"><h2 class="card-title">팀 관리</h2><form class="code-form" data-code-type="team"><input type="hidden" name="id"><div class="field-grid"><div class="field"><label>소속 부서</label><select name="departmentId" required></select></div><div class="field"><label>팀명</label><input name="name" required maxlength="100"></div></div><div class="helper">코드는 저장 시 자동 생성됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button></div></form><div class="grid-table-wrap"><table><thead><tr><th>부서</th><th>코드</th><th>팀명</th><th>상태</th><th>관리</th></tr></thead><tbody id="teamCodeBody"></tbody></table></div></section></div>
-        <div class="code-subpanel" data-code-panel="jobPosition"><section class="card"><h2 class="card-title">직위 관리</h2><form class="code-form" data-code-type="jobPosition"><input type="hidden" name="id"><div class="field"><label>직위명</label><input name="name" required maxlength="100"></div><div class="helper">직위는 부서 및 팀과 무관한 독립 항목이며, 코드는 저장 시 자동 생성됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button></div></form><div class="grid-table-wrap"><table><thead><tr><th>코드</th><th>직위명</th><th>상태</th><th>관리</th></tr></thead><tbody id="jobPositionCodeBody"></tbody></table></div></section></div>
-        <div class="code-subpanel" data-code-panel="position"><section class="card"><h2 class="card-title">직책 관리</h2><form class="code-form" data-code-type="position"><input type="hidden" name="id"><div class="field"><label>직책명</label><input name="name" required maxlength="100"></div><div class="helper">코드는 저장 시 자동 생성됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button></div></form><div class="grid-table-wrap"><table><thead><tr><th>코드</th><th>직책명</th><th>상태</th><th>관리</th></tr></thead><tbody id="positionCodeBody"></tbody></table></div></section></div>
+        <div class="code-subpanel active" data-code-panel="department"><section class="card"><form class="code-form" data-code-type="department"><input type="hidden" name="id"><div class="field"><label>부서명</label><input name="name" required maxlength="100"></div><div class="helper">코드는 저장 시 자동 생성됩니다. CSV 업로드는 전체 행이 정상일 때만 한 번에 저장됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button><a class="mini-button" href="/supervisor/api/basic-codes/departments/sample.csv">UTF-8 CSV 예제</a><button class="mini-button" type="button" id="openDepartmentCsv">CSV 업로드</button><input type="file" id="departmentCsvFile" accept=".csv,text/csv" hidden></div><div id="codeMessage" class="message"></div></form><div class="grid-table-wrap"><table><thead><tr><th>코드</th><th>부서명</th><th>상태</th><th>관리</th></tr></thead><tbody id="departmentCodeBody"></tbody></table></div></section></div>
+        <div class="code-subpanel" data-code-panel="team"><section class="card"><h2 class="card-title">팀 관리</h2><form class="code-form" data-code-type="team"><input type="hidden" name="id"><div class="field-grid"><div class="field"><label>소속 부서</label><select name="departmentId" required></select></div><div class="field"><label>팀명</label><input name="name" required maxlength="100"></div></div><div class="helper">코드는 저장 시 자동 생성됩니다. CSV 업로드는 전체 행이 정상일 때만 한 번에 저장됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button><a class="mini-button" href="/supervisor/api/basic-codes/teams/sample.csv">UTF-8 CSV 예제</a><button class="mini-button" type="button" id="openTeamCsv">CSV 업로드</button><input type="file" id="teamCsvFile" accept=".csv,text/csv" hidden></div></form><div class="grid-table-wrap"><table><thead><tr><th>부서</th><th>코드</th><th>팀명</th><th>상태</th><th>관리</th></tr></thead><tbody id="teamCodeBody"></tbody></table></div></section></div>
+        <div class="code-subpanel" data-code-panel="jobPosition"><section class="card"><h2 class="card-title">직위 관리</h2><form class="code-form" data-code-type="jobPosition"><input type="hidden" name="id"><div class="field"><label>직위명</label><input name="name" required maxlength="100"></div><div class="helper">직위는 부서 및 팀과 무관한 독립 항목이며, 코드는 저장 시 자동 생성됩니다. CSV 업로드는 전체 행이 정상일 때만 한 번에 저장됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button><a class="mini-button" href="/supervisor/api/basic-codes/job-positions/sample.csv">UTF-8 CSV 예제</a><button class="mini-button" type="button" id="openJobPositionCsv">CSV 업로드</button><input type="file" id="jobPositionCsvFile" accept=".csv,text/csv" hidden></div></form><div class="grid-table-wrap"><table><thead><tr><th>코드</th><th>직위명</th><th>상태</th><th>관리</th></tr></thead><tbody id="jobPositionCodeBody"></tbody></table></div></section></div>
+        <div class="code-subpanel" data-code-panel="position"><section class="card"><h2 class="card-title">직책 관리</h2><form class="code-form" data-code-type="position"><input type="hidden" name="id"><div class="field"><label>직책명</label><input name="name" required maxlength="100"></div><div class="helper">코드는 저장 시 자동 생성됩니다. CSV 업로드는 전체 행이 정상일 때만 한 번에 저장됩니다.</div><div class="actions"><button class="mini-button code-cancel" type="button">초기화</button><button class="save">저장</button><a class="mini-button" href="/supervisor/api/basic-codes/positions/sample.csv">UTF-8 CSV 예제</a><button class="mini-button" type="button" id="openPositionCsv">CSV 업로드</button><input type="file" id="positionCsvFile" accept=".csv,text/csv" hidden></div></form><div class="grid-table-wrap"><table><thead><tr><th>코드</th><th>직책명</th><th>상태</th><th>관리</th></tr></thead><tbody id="positionCodeBody"></tbody></table></div></section></div>
+      </section>
+    </section>
+
+    <section class="tab-panel" id="tab-notices">
+      <section class="card full-span">
+        <div id="noticeToolbar"><div class="field notice-district-condition"><label for="noticeDistrictSearch">지자체</label><div class="code-district-search" style="width:100%"><input id="noticeDistrictSearch" type="text" autocomplete="off" placeholder="계약 지자체명을 3글자 이상 입력해 주세요"><input id="noticeDistrictFilter" type="hidden" value=""><div class="code-district-results" id="noticeDistrictResults"></div></div></div><div class="notice-toolbar-actions"><div class="field notice-keyword-condition"><label for="noticeSearch">검색어</label><input id="noticeSearch" type="text" placeholder="제목 또는 내용 검색" disabled></div><button type="button" class="mini-button" id="noticeSearchButton" disabled>조회</button><button type="button" class="mini-button" id="noticeSearchReset">초기화</button><button type="button" class="save" id="openNoticeCreate" disabled>공지사항 작성</button></div></div><div class="grid-summary" id="noticeSummary"></div>
+        <div class="grid-table-wrap" style="max-height:calc(100vh - 240px)"><table><thead><tr><th>고정</th><th>지자체</th><th>제목</th><th>Popup</th><th>노출기간</th><th>첨부</th><th>등록일</th><th>관리</th></tr></thead><tbody id="noticeBody"><tr><td colspan="8" style="text-align:center">지자체를 선택해 주세요.</td></tr></tbody></table></div>
+      </section>
+      <div class="modal-overlay" id="noticeModal" role="dialog" aria-modal="true" aria-labelledby="noticeModalTitle"><div class="modal-box" style="width:min(820px,100%);height:auto;max-height:calc(100vh - 48px)"><div class="modal-header"><h2 class="card-title" id="noticeModalTitle">공지사항 작성</h2><button class="modal-close" type="button" id="closeNoticeModal">닫기</button></div><div class="modal-body" style="display:block;overflow-y:auto;padding:20px 22px"><form id="noticeForm" enctype="multipart/form-data"><input type="hidden" name="id"><input type="hidden" name="districtSeq"><div class="field notice-title-field"><label for="noticeTitle">제목</label><input id="noticeTitle" name="title" type="text" maxlength="200" required></div><div class="field notice-content-field"><label for="noticeContent">내용</label><textarea id="noticeContent" name="content" rows="8" required style="width:100%;padding:10px 11px;border:1px solid #ccd7e4;border-radius:10px;resize:vertical;font:inherit;outline:none"></textarea></div><div class="notice-options-row"><label class="notice-check"><input name="isPinned" type="checkbox" value="yes"><span>상단 고정</span></label><label class="notice-check"><input name="isPopup" type="checkbox" value="yes"><span>Popup 여부</span></label></div><div id="noticePopupPeriod" hidden><div class="field"><label>Popup 시작</label><input name="popupFrom" type="datetime-local"></div><div class="field"><label>Popup 종료</label><input name="popupTo" type="datetime-local"></div></div><div class="field notice-attachment-field"><label>첨부파일</label><input id="noticeAttachment" name="attachment" type="file" hidden><div id="noticeFileDrop" tabindex="0" role="button" style="min-height:150px;display:grid;place-items:center;padding:18px;border:1.5px dashed #c9c9c9;border-radius:12px;background:#fafbfd;color:#718096;text-align:center;cursor:pointer;line-height:1.7"><span>📎 파일을 이곳에 끌어다 놓거나<br><b style="color:#29466e">클릭하여 파일 선택</b><br><small>최대 20MB · 파일 1개</small></span></div><span id="noticeAttachmentCurrent" class="helper"></span></div></form></div><div class="modal-footer"><div id="noticeMessage" class="message"></div><div style="display:flex;justify-content:center;gap:8px"><button type="button" class="mini-button" id="noticeReset">초기화</button><button class="save" id="noticeSubmitButton" type="submit" form="noticeForm" disabled>저장</button></div></div></div></div>
+    </section>
+
+    <section class="tab-panel" id="tab-settlement">
+      <section class="card full-span">
+        <div class="code-district-toolbar">
+          <label for="settlementDistrictSearch">지자체</label>
+          <div class="code-district-search"><input id="settlementDistrictSearch" type="text" autocomplete="off" placeholder="3글자 이상 입력해 주세요" value=""><input id="settlementDistrictSeq" type="hidden" value=""><div class="code-district-results" id="settlementDistrictResults"></div></div>
+          <div class="helper">정산 정보를 조회할 지자체를 선택해 주세요.</div>
+        </div>
+        <div class="message" id="settlementDistrictMessage" hidden></div>
+        <div class="settlement-grid-toolbar">
+          <div class="grid-summary" id="settlementAmountSummary" aria-live="polite"></div>
+          <div id="settlementContractSummary" class="helper"></div>
+          <button type="button" class="mini-button" id="downloadSettlementExcel">Excel 다운로드</button>
+        </div>
+        <div class="grid-table-wrap" id="settlementGridWrap">
+          <table>
+            <thead><tr><th>정산월</th><th>구독기간</th><th>회차</th><th>청구금액</th><th>실입금액</th><th>세금계산서 발급</th><th>발급일</th><th>입금일</th><th>입금계좌 확인</th><th>관리</th></tr></thead>
+            <tbody id="settlementBody"><tr><td colspan="10" style="text-align:center">지자체를 선택해 주세요.</td></tr></tbody>
+          </table>
+        </div>
       </section>
     </section>
 
@@ -1947,6 +2037,25 @@ function renderDashboardPage(params: {
     const codeMessage = document.getElementById('codeMessage');
     let codeState = { departments: [], teams: [], jobPositions: [], positions: [] };
     function safeText(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+    const settlementDistrictSearch=document.getElementById('settlementDistrictSearch');
+    const settlementDistrictSeq=document.getElementById('settlementDistrictSeq');
+    const settlementDistrictResults=document.getElementById('settlementDistrictResults');
+    const settlementDistrictMessage=document.getElementById('settlementDistrictMessage');
+    const settlementContractSummary=document.getElementById('settlementContractSummary');
+    const settlementAmountSummary=document.getElementById('settlementAmountSummary');
+    const downloadSettlementExcel=document.getElementById('downloadSettlementExcel');
+    const settlementBody=document.getElementById('settlementBody');
+    function renderSettlementRows(data) { settlementContractSummary.textContent=data.summary||'';settlementAmountSummary.textContent=data.amountSummary||'';downloadSettlementExcel.disabled=!data.valid;if(!data.valid){settlementBody.innerHTML='<tr><td colspan="10" style="text-align:center">'+safeText(data.message||'유효한 구독 계약이 없습니다.')+'</td></tr>';return}const money=value=>Number(value||0).toLocaleString('ko-KR');settlementBody.innerHTML=data.rows.map(row=>{const locked=row.locked?' disabled':'';return '<tr data-billing-month="'+row.billingMonth+'"><td>'+safeText(row.billingMonth)+'</td><td>'+safeText(row.periodFrom)+' ~ '+safeText(row.periodTo)+'</td><td><input class="numeric-only installment-input installment-number" type="text" inputmode="numeric" pattern="[0-9]*" value="'+row.installmentNumber+'" aria-label="현재 회차"'+locked+'> / <input class="numeric-only installment-input total-installments" type="text" inputmode="numeric" pattern="[0-9]*" value="'+row.totalInstallments+'" aria-label="전체 회차"'+locked+'></td><td><input class="numeric-only money-input amount" type="text" inputmode="numeric" value="'+money(row.amount)+'"'+locked+'></td><td><input class="numeric-only money-input actual-deposit-amount" type="text" inputmode="numeric" value="'+money(row.actualDepositAmount)+'"'+locked+'></td><td><input class="tax-issued" type="checkbox" '+(row.taxInvoiceIssued?'checked ':'')+'aria-label="세금계산서 발급 여부"'+locked+'></td><td><input class="tax-date" type="date" value="'+safeText(row.taxInvoiceDate||'')+'" '+(row.taxInvoiceIssued&&!row.locked?'':'disabled')+'></td><td><input class="deposit-date" type="date" value="'+safeText(row.depositDate||'')+'"'+locked+'></td><td><input class="account-confirmed" type="checkbox" '+(row.depositAccountConfirmed?'checked ':'')+'aria-label="입금계좌 확인 여부"'+locked+'></td><td><button type="button" class="mini-button save-settlement"'+locked+'>'+(row.locked?'저장완료':'저장')+'</button></td></tr>'}).join(''); }
+    async function loadSettlement() { if(!settlementDistrictSeq.value){settlementContractSummary.textContent='';settlementAmountSummary.textContent='';downloadSettlementExcel.disabled=true;settlementBody.innerHTML='<tr><td colspan="10" style="text-align:center">지자체를 선택해 주세요.</td></tr>';return}settlementBody.innerHTML='<tr><td colspan="10" style="text-align:center">정산 정보를 불러오는 중입니다.</td></tr>';try{const response=await fetch('/supervisor/api/settlements?districtSeq='+encodeURIComponent(settlementDistrictSeq.value));const data=await response.json();if(!response.ok)throw new Error(data.message||'정산 정보를 불러오지 못했습니다.');renderSettlementRows(data)}catch(error){settlementContractSummary.textContent='';settlementAmountSummary.textContent='';downloadSettlementExcel.disabled=true;settlementBody.innerHTML='<tr><td colspan="10" style="text-align:center;color:#c73535">'+safeText(error.message||'정산 정보를 불러오지 못했습니다.')+'</td></tr>';} }
+    function renderSettlementDistrictResults() { const query=settlementDistrictSearch.value.trim().toLowerCase();settlementDistrictSeq.value='';settlementDistrictMessage.textContent='';settlementDistrictMessage.className='message';if(query.length<3){settlementDistrictResults.classList.remove('open');settlementDistrictResults.innerHTML='';return}const matches=districtOptions.filter(item=>item.full_name.toLowerCase().includes(query)).slice(0,30);settlementDistrictResults.innerHTML=matches.length?matches.map(item=>'<button type="button" data-seq="'+item.seq+'">'+safeText(item.full_name)+'</button>').join(''):'<div class="code-district-empty">일치하는 지자체가 없습니다.</div>';settlementDistrictResults.classList.add('open');settlementDistrictResults.querySelectorAll('button').forEach(button=>button.onclick=async()=>{const item=districtOptions.find(x=>String(x.seq)===button.dataset.seq);settlementDistrictSearch.value=item.full_name;settlementDistrictSeq.value=String(item.seq);settlementDistrictResults.classList.remove('open');settlementDistrictMessage.textContent=item.full_name+'이(가) 선택되었습니다.';settlementDistrictMessage.className='message good';await loadSettlement()}); }
+    settlementDistrictSearch.addEventListener('input',renderSettlementDistrictResults);
+    settlementDistrictSearch.addEventListener('focus',()=>{settlementDistrictSearch.select();settlementDistrictResults.innerHTML='';settlementDistrictResults.classList.remove('open')});
+    document.addEventListener('click',event=>{if(!settlementDistrictResults.parentElement.contains(event.target))settlementDistrictResults.classList.remove('open')});
+    settlementBody.addEventListener('change',event=>{if(event.target.classList.contains('tax-issued')){const row=event.target.closest('tr'),date=row.querySelector('.tax-date');date.disabled=!event.target.checked;if(!event.target.checked)date.value=''}});
+    settlementBody.addEventListener('input',event=>{if(!event.target.classList.contains('numeric-only'))return;const digits=event.target.value.replace(/[^0-9]/g,'').replace(/^0+(?=\d)/,'');event.target.value=event.target.classList.contains('money-input')?(digits?Number(digits).toLocaleString('ko-KR'):''):digits;if(event.target.classList.contains('money-input')){const row=event.target.closest('tr'),amountInput=row.querySelector('.amount'),actualInput=row.querySelector('.actual-deposit-amount'),amount=Number(amountInput.value.replaceAll(',','')||0),actual=Number(actualInput.value.replaceAll(',','')||0);if(actual>amount)actualInput.value=amount.toLocaleString('ko-KR')}});
+    settlementBody.addEventListener('keydown',event=>{if(event.target.classList.contains('numeric-only')&&!/^[0-9]$/.test(event.key)&&!['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'].includes(event.key))event.preventDefault()});
+    settlementBody.addEventListener('click',async event=>{const button=event.target.closest('.save-settlement');if(!button)return;const row=button.closest('tr'),amount=Number(row.querySelector('.amount').value.replaceAll(',','')),actualDepositAmount=Number(row.querySelector('.actual-deposit-amount').value.replaceAll(',',''));if(actualDepositAmount>amount){alert('실입금액은 청구금액보다 많을 수 없습니다.');return}button.disabled=true;try{const response=await fetch('/supervisor/api/settlements/'+encodeURIComponent(settlementDistrictSeq.value)+'/'+encodeURIComponent(row.dataset.billingMonth),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({installmentNumber:Number(row.querySelector('.installment-number').value),totalInstallments:Number(row.querySelector('.total-installments').value),amount,actualDepositAmount,taxInvoiceIssued:row.querySelector('.tax-issued').checked,taxInvoiceDate:row.querySelector('.tax-date').value||null,depositDate:row.querySelector('.deposit-date').value||null,depositAccountConfirmed:row.querySelector('.account-confirmed').checked})});const data=await response.json();if(!response.ok)throw new Error(data.message||'저장하지 못했습니다.');settlementDistrictMessage.textContent=data.message;settlementDistrictMessage.className='message good';await loadSettlement()}catch(error){settlementDistrictMessage.textContent=error.message||'저장하지 못했습니다.';settlementDistrictMessage.className='message bad'}finally{button.disabled=false}});
+    downloadSettlementExcel.addEventListener('click',()=>{if(!settlementDistrictSeq.value)return;window.location.href='/supervisor/api/settlements/export.xls?districtSeq='+encodeURIComponent(settlementDistrictSeq.value)});
     function codeButtons(type, item) { return '<button type="button" class="mini-button edit-code" data-type="'+type+'" data-id="'+item.id+'">수정</button> <button type="button" class="mini-button toggle-code" data-type="'+type+'" data-id="'+item.id+'">'+(item.isActive?'사용중지':'사용')+'</button> <button type="button" class="mini-button delete-code" data-type="'+type+'" data-id="'+item.id+'" style="border-color:#efb4b4;color:#c73535">삭제</button>'; }
     function renderBasicCodes() {
       const empty = (span) => '<tr><td colspan="'+span+'" style="text-align:center">등록된 항목이 없습니다.</td></tr>';
@@ -1972,10 +2081,39 @@ function renderDashboardPage(params: {
     codeDistrictSearch.addEventListener('input',renderCodeDistrictResults);
     codeDistrictSearch.addEventListener('focus',()=>{codeDistrictSearch.value='';codeDistrictSeq.value='';codeDistrictResults.innerHTML='';codeDistrictResults.classList.remove('open')});
     document.addEventListener('click',event=>{if(!codeDistrictResults.parentElement.contains(event.target))codeDistrictResults.classList.remove('open')});
-    function activateCodeTab(type) { document.querySelectorAll('.code-subtab').forEach(x=>x.classList.toggle('active',x.dataset.codeTab===type));document.querySelectorAll('.code-subpanel').forEach(x=>x.classList.toggle('active',x.dataset.codePanel===type)); }
+    function activateCodeTab(type) { document.querySelectorAll('.code-subtab').forEach(x=>x.classList.toggle('active',x.dataset.codeTab===type));document.querySelectorAll('.code-subpanel').forEach(x=>x.classList.toggle('active',x.dataset.codePanel===type));document.querySelector('.code-form[data-code-type="'+type+'"]').appendChild(codeMessage);codeMessage.textContent='';codeMessage.className='message'; }
     document.querySelectorAll('.code-subtab').forEach(button=>button.addEventListener('click',()=>activateCodeTab(button.dataset.codeTab)));
-    document.querySelectorAll('[data-main-tab]').forEach(button=>button.addEventListener('click',async()=>{document.querySelectorAll('[data-main-tab]').forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+button.dataset.mainTab).classList.add('active');if(button.dataset.mainTab==='codes'){try{await loadBasicCodes()}catch(error){codeMessage.textContent=error.message;codeMessage.className='message bad'}}}));
+    const noticeForm=document.getElementById('noticeForm'),noticeBody=document.getElementById('noticeBody'),noticeMessage=document.getElementById('noticeMessage'),noticePopupPeriod=document.getElementById('noticePopupPeriod'),noticeAttachmentCurrent=document.getElementById('noticeAttachmentCurrent'),noticeAttachment=document.getElementById('noticeAttachment'),noticeFileDrop=document.getElementById('noticeFileDrop'),noticeModal=document.getElementById('noticeModal'),noticeDistrictSearch=document.getElementById('noticeDistrictSearch'),noticeDistrictFilter=document.getElementById('noticeDistrictFilter'),noticeDistrictResults=document.getElementById('noticeDistrictResults'),openNoticeCreate=document.getElementById('openNoticeCreate'),noticeSearch=document.getElementById('noticeSearch'),noticeSummary=document.getElementById('noticeSummary'),noticeSubmitButton=document.getElementById('noticeSubmitButton');let noticeItems=[],noticeInitialState='';
+    function getNoticeFormState(){const file=noticeAttachment.files[0];return JSON.stringify({title:noticeForm.elements.title.value,content:noticeForm.elements.content.value,isPinned:noticeForm.elements.isPinned.checked,isPopup:noticeForm.elements.isPopup.checked,popupFrom:noticeForm.elements.popupFrom.value,popupTo:noticeForm.elements.popupTo.value,file:file?file.name+'|'+file.size+'|'+file.lastModified:''})}
+    function setNoticeFormBaseline(){noticeInitialState=getNoticeFormState();noticeSubmitButton.disabled=true}
+    function updateNoticeSubmitState(){noticeSubmitButton.disabled=getNoticeFormState()===noticeInitialState}
+    function resetNoticeForm(){noticeForm.reset();noticeForm.elements.id.value='';noticeForm.elements.districtSeq.value=noticeDistrictFilter.value;noticePopupPeriod.hidden=true;noticeAttachmentCurrent.textContent='';noticeMessage.textContent='';document.getElementById('noticeModalTitle').textContent='공지사항 작성';setNoticeFormBaseline()}
+    function renderNoticeRows(){const query=noticeSearch.value.trim().toLowerCase(),filtered=noticeItems.filter(item=>!query||String(item.title).toLowerCase().includes(query)||String(item.content).toLowerCase().includes(query)),districtName=noticeDistrictSearch.value||'-';noticeSummary.textContent='총 '+filtered.length+'건';noticeBody.innerHTML=filtered.length?filtered.map(item=>'<tr><td>'+(item.isPinned?'📌':'-')+'</td><td>'+safeText(districtName)+'</td><td><b>'+safeText(item.title)+'</b><div style="max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#718096;font-size:.75rem">'+safeText(item.content)+'</div></td><td>'+(item.isPopup?'Yes':'No')+'</td><td>'+(item.isPopup?safeText((item.popupFrom||'-')+' ~ '+(item.popupTo||'-')):'-')+'</td><td>'+(item.attachmentPath?'<a href="'+item.attachmentPath+'" target="_blank">'+safeText(item.attachmentName||'다운로드')+'</a>':'-')+'</td><td>'+safeText(item.createdAt)+'</td><td><button type="button" class="mini-button edit-notice" data-id="'+item.id+'">편집</button> <button type="button" class="mini-button delete-notice" data-id="'+item.id+'">삭제</button></td></tr>').join(''):'<tr><td colspan="8" style="text-align:center">검색 결과가 없습니다.</td></tr>'}
+    async function loadNotices(){const districtSeq=noticeDistrictFilter.value;if(!districtSeq)return;const response=await fetch('/supervisor/api/notices?districtSeq='+encodeURIComponent(districtSeq),{cache:'no-store'}),data=await response.json();if(!response.ok)throw new Error(data.message||'공지사항을 불러오지 못했습니다.');noticeItems=data.notices||[];renderNoticeRows()}
+      noticeForm.elements.isPopup.onchange=()=>{const enabled=noticeForm.elements.isPopup.checked;noticePopupPeriod.hidden=!enabled;noticeForm.elements.popupFrom.required=enabled;noticeForm.elements.popupTo.required=enabled;updateNoticeSubmitState()};
+    noticeForm.addEventListener('input',updateNoticeSubmitState);noticeForm.addEventListener('change',updateNoticeSubmitState);
+    function showNoticeFile(file){noticeAttachmentCurrent.textContent=file?'선택 파일: '+file.name:''}
+    noticeFileDrop.onclick=()=>noticeAttachment.click();noticeFileDrop.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();noticeAttachment.click()}};noticeAttachment.onchange=()=>{showNoticeFile(noticeAttachment.files[0]);updateNoticeSubmitState()};noticeFileDrop.ondragover=event=>{event.preventDefault();noticeFileDrop.style.borderColor='#2f66e0';noticeFileDrop.style.background='#f2f6ff'};noticeFileDrop.ondragleave=()=>{noticeFileDrop.style.borderColor='#c9c9c9';noticeFileDrop.style.background='#fafbfd'};noticeFileDrop.ondrop=event=>{event.preventDefault();noticeFileDrop.ondragleave();const file=event.dataTransfer.files[0];if(!file)return;const transfer=new DataTransfer();transfer.items.add(file);noticeAttachment.files=transfer.files;showNoticeFile(file);updateNoticeSubmitState()};
+    const globalNoticeDistrictOption='<button type="button" data-seq="all" data-name="지자체 전체">지자체 전체 <small style="display:block;margin-top:3px;opacity:.7">계약된 모든 지자체</small></button>';
+    noticeDistrictSearch.oninput=async()=>{noticeDistrictFilter.value='';openNoticeCreate.disabled=true;noticeSearch.disabled=true;noticeSearchButton.disabled=true;noticeSearch.value='';noticeItems=[];noticeSummary.textContent='';noticeBody.innerHTML='<tr><td colspan="8" style="text-align:center">검색 결과에서 지자체를 선택해 주세요.</td></tr>';const query=noticeDistrictSearch.value.trim();if(query.length<3){noticeDistrictResults.innerHTML=globalNoticeDistrictOption;noticeDistrictResults.classList.add('open');return}try{const response=await fetch('/supervisor/api/notices/contracted-districts?q='+encodeURIComponent(query),{cache:'no-store'}),data=await response.json();if(!response.ok)throw new Error(data.message||'지자체를 검색하지 못했습니다.');const districts=data.districts||[];noticeDistrictResults.innerHTML=globalNoticeDistrictOption+districts.map(item=>'<button type="button" data-seq="'+item.seq+'" data-name="'+safeText(item.fullName)+'">'+safeText(item.fullName)+'</button>').join('');noticeDistrictResults.classList.add('open')}catch(error){noticeDistrictResults.innerHTML=globalNoticeDistrictOption+'<div class="code-district-empty">'+safeText(error.message)+'</div>';noticeDistrictResults.classList.add('open')}};noticeDistrictResults.onclick=async event=>{const button=event.target.closest('button[data-seq]');if(!button)return;noticeDistrictFilter.value=button.dataset.seq;noticeDistrictSearch.value=button.dataset.name;noticeDistrictResults.classList.remove('open');openNoticeCreate.disabled=false;noticeSearch.disabled=false;noticeSearchButton.disabled=false;noticeSearch.value='';await loadNotices()};noticeDistrictSearch.onfocus=()=>{if(!noticeDistrictFilter.value){noticeDistrictResults.innerHTML=globalNoticeDistrictOption;noticeDistrictResults.classList.add('open')}};document.addEventListener('click',event=>{if(!noticeDistrictResults.parentElement.contains(event.target))noticeDistrictResults.classList.remove('open')});const noticeSearchButton=document.getElementById('noticeSearchButton');noticeSearchButton.onclick=()=>{if(!noticeDistrictFilter.value){noticeBody.innerHTML='<tr><td colspan="8" style="text-align:center">지자체를 먼저 검색하여 선택해 주세요.</td></tr>';return}renderNoticeRows()};document.getElementById('noticeSearchReset').onclick=()=>{noticeSearch.value='';if(noticeDistrictFilter.value)renderNoticeRows()};noticeSearch.onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();if(noticeDistrictFilter.value)renderNoticeRows()}};openNoticeCreate.onclick=()=>{if(!noticeDistrictFilter.value)return;resetNoticeForm();noticeModal.classList.add('open')};document.getElementById('closeNoticeModal').onclick=()=>noticeModal.classList.remove('open');noticeModal.onclick=event=>{if(event.target===noticeModal)noticeModal.classList.remove('open')};document.getElementById('noticeReset').onclick=resetNoticeForm;
+      function showNoticeConfirm(message){return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='modal-overlay open';overlay.innerHTML='<div class="modal-box" role="alertdialog" aria-modal="true" aria-labelledby="noticeConfirmTitle" style="width:min(430px,100%);height:auto"><div class="modal-header"><h2 class="card-title" id="noticeConfirmTitle">확인</h2></div><div class="modal-body" style="padding:32px 24px;text-align:center"><p style="margin:0;font-size:1.05rem;font-weight:800;color:#172b4d">'+safeText(message)+'</p></div><div class="modal-footer notice-confirm-footer"><button type="button" class="mini-button notice-confirm-cancel">취소</button><button type="button" class="save notice-confirm-accept">확인</button></div></div>';document.body.appendChild(overlay);let finished=false;const close=result=>{if(finished)return;finished=true;document.removeEventListener('keydown',onKeydown);overlay.remove();resolve(result)};const onKeydown=event=>{if(event.key==='Escape')close(false)};overlay.querySelector('.notice-confirm-cancel').onclick=()=>close(false);overlay.querySelector('.notice-confirm-accept').onclick=()=>close(true);overlay.onclick=event=>{if(event.target===overlay)close(false)};document.addEventListener('keydown',onKeydown);overlay.querySelector('.notice-confirm-accept').focus()})}
+      noticeForm.onsubmit=async event=>{event.preventDefault();const isEditing=Boolean(noticeForm.elements.id.value);if(!await showNoticeConfirm(isEditing?'수정하시겠습니까?':'저장하시겠습니까?'))return;const response=await fetch('/supervisor/api/notices',{method:'POST',body:new FormData(noticeForm)}),data=await response.json();noticeMessage.textContent=data.message||'';noticeMessage.className='message '+(response.ok?'good':'bad');if(response.ok){noticeModal.classList.remove('open');await loadNotices()}};
+    noticeBody.onclick=async event=>{const button=event.target.closest('.edit-notice,.delete-notice');if(!button)return;const item=noticeItems.find(value=>String(value.id)===button.dataset.id);if(!item)return;if(button.classList.contains('delete-notice')){if(!confirm('공지사항을 삭제하시겠습니까?'))return;const response=await fetch('/supervisor/api/notices/'+item.id+'/delete',{method:'POST'}),data=await response.json();noticeMessage.textContent=data.message;noticeMessage.className='message '+(response.ok?'good':'bad');if(response.ok)await loadNotices();return}resetNoticeForm();document.getElementById('noticeModalTitle').textContent='공지사항 편집';noticeForm.elements.id.value=item.id;noticeForm.elements.title.value=item.title;noticeForm.elements.content.value=item.content;noticeForm.elements.isPinned.checked=Boolean(item.isPinned);noticeForm.elements.isPopup.checked=Boolean(item.isPopup);noticeForm.elements.popupFrom.value=item.popupFrom||'';noticeForm.elements.popupTo.value=item.popupTo||'';noticeAttachmentCurrent.textContent=item.attachmentName?'현재 파일: '+item.attachmentName:'';noticeForm.elements.isPopup.onchange();setNoticeFormBaseline();noticeModal.classList.add('open')};
+    document.querySelectorAll('[data-main-tab]').forEach(button=>button.addEventListener('click',async()=>{document.querySelectorAll('[data-main-tab]').forEach(x=>x.classList.toggle('active',x===button));document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+button.dataset.mainTab).classList.add('active');if(button.dataset.mainTab==='codes'&&codeDistrictSeq.value){try{await loadBasicCodes()}catch(error){codeMessage.textContent=error.message;codeMessage.className='message bad'}}if(button.dataset.mainTab==='notices'){try{await loadNotices()}catch(error){noticeMessage.textContent=error.message;noticeMessage.className='message bad'}}if(button.dataset.mainTab==='settlement'&&settlementDistrictSeq.value)await loadSettlement()}));
+    function filterBasicCodes(form) { const type=form.dataset.codeType,list=type==='department'?codeState.departments:type==='team'?codeState.teams:type==='jobPosition'?codeState.jobPositions:codeState.positions,panel=form.closest('.code-subpanel'),query=form.elements.name.value.trim().toLowerCase(),departmentId=type==='team'?form.elements.departmentId.value:'';let visible=0;panel.querySelectorAll('tbody tr').forEach((row,index)=>{const item=list[index],show=Boolean(item&&(!query||String(item.name).toLowerCase().includes(query))&&(!departmentId||String(item.departmentId)===departmentId));row.style.display=show?'':'none';if(show)visible++});codeMessage.textContent='총 '+visible+'건이 조회되었습니다.';codeMessage.className='message good'; }
+    document.querySelectorAll('.code-form').forEach(form=>{const search=document.createElement('button');search.type='button';search.className='mini-button code-search';search.textContent='검색';form.querySelector('.actions').insertBefore(search,form.querySelector('.save'));search.onclick=()=>filterBasicCodes(form);form.querySelector('.code-cancel').addEventListener('click',()=>setTimeout(()=>{renderBasicCodes();codeMessage.textContent='';codeMessage.className='message'},0))});
     document.querySelectorAll('.code-form').forEach(form=>{form.addEventListener('submit',async event=>{event.preventDefault();const savedDepartmentId=form.dataset.codeType==='team'?form.elements.departmentId.value:'';const payload=Object.fromEntries(new FormData(form));payload.type=form.dataset.codeType;payload.districtSeq=codeDistrictSeq.value;const response=await fetch('/supervisor/api/basic-codes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await response.json();codeMessage.textContent=data.message;codeMessage.className='message '+(response.ok?'good':'bad');if(response.ok){form.reset();form.elements.id.value='';await loadBasicCodes();if(savedDepartmentId&&form.dataset.codeType==='team')form.elements.departmentId.value=savedDepartmentId}});form.querySelector('.code-cancel').onclick=()=>{form.reset();form.elements.id.value=''}});
+    function showDepartmentCsvErrors(errors,title='부서 CSV 업로드 오류',noun='부서') { const modal=document.createElement('div');modal.className='modal-overlay open';modal.innerHTML='<div class="modal-box" style="max-width:720px"><div class="modal-header"><h2 class="card-title">'+safeText(title)+'</h2><button type="button" class="modal-close">닫기</button></div><div class="modal-body"><p style="margin-top:0;color:#c73535">오류가 있어 어떤 '+safeText(noun)+'도 저장하지 않았습니다. 아래 항목을 모두 수정한 뒤 다시 업로드해 주세요.</p><ol style="margin:0;padding-left:24px;line-height:1.8">'+errors.map(error=>'<li>'+safeText(error)+'</li>').join('')+'</ol></div></div>';document.body.appendChild(modal);modal.querySelector('.modal-close').onclick=()=>modal.remove();modal.addEventListener('click',event=>{if(event.target===modal)modal.remove()}); }
+    function showDepartmentCsvSuccess(message,title='부서 CSV 업로드 완료') { const modal=document.createElement('div');modal.className='modal-overlay open';modal.innerHTML='<div class="modal-box" style="max-width:480px"><div class="modal-header"><h2 class="card-title">'+safeText(title)+'</h2><button type="button" class="modal-close">닫기</button></div><div class="modal-body"><p style="margin:0;font-size:1rem;font-weight:700;color:#16794b">'+safeText(message)+'</p></div><div class="modal-footer"><button type="button" class="save modal-confirm">확인</button></div></div>';document.body.appendChild(modal);const close=()=>modal.remove();modal.querySelector('.modal-close').onclick=close;modal.querySelector('.modal-confirm').onclick=close;modal.addEventListener('click',event=>{if(event.target===modal)close()}); }
+    const departmentCsvFile=document.getElementById('departmentCsvFile');
+    document.getElementById('openDepartmentCsv').onclick=()=>{if(!codeDistrictSeq.value){showDepartmentCsvErrors(['검색 결과에서 지자체를 먼저 선택해 주세요.']);return}departmentCsvFile.value='';departmentCsvFile.click()};
+    departmentCsvFile.addEventListener('change',async()=>{const file=departmentCsvFile.files[0];if(!file)return;if(!confirm('파일업로드를 하시겠습니까?')){departmentCsvFile.value='';return}const body=new FormData();body.append('districtSeq',codeDistrictSeq.value);body.append('file',file);codeMessage.textContent='CSV 파일을 검사하고 있습니다...';codeMessage.className='message';try{const response=await fetch('/supervisor/api/basic-codes/departments/upload',{method:'POST',body});const data=await response.json();if(!response.ok){showDepartmentCsvErrors(data.errors?.length?data.errors:[data.message||'CSV 파일을 업로드하지 못했습니다.']);codeMessage.textContent='CSV 오류를 확인해 주세요.';codeMessage.className='message bad';return}codeMessage.textContent=data.message;codeMessage.className='message good';await loadBasicCodes();showDepartmentCsvSuccess(data.message)}catch(error){showDepartmentCsvErrors([error.message||'CSV 파일을 업로드하지 못했습니다.'])}});
+    const teamCsvFile=document.getElementById('teamCsvFile');
+    document.getElementById('openTeamCsv').onclick=()=>{if(!codeDistrictSeq.value){showDepartmentCsvErrors(['검색 결과에서 지자체를 먼저 선택해 주세요.'],'팀 CSV 업로드 오류','팀');return}teamCsvFile.value='';teamCsvFile.click()};
+    teamCsvFile.addEventListener('change',async()=>{const file=teamCsvFile.files[0];if(!file)return;if(!confirm('파일업로드를 하시겠습니까?')){teamCsvFile.value='';return}const body=new FormData();body.append('districtSeq',codeDistrictSeq.value);body.append('file',file);codeMessage.textContent='CSV 파일을 검사하고 있습니다...';codeMessage.className='message';try{const response=await fetch('/supervisor/api/basic-codes/teams/upload',{method:'POST',body});const data=await response.json();if(!response.ok){showDepartmentCsvErrors(data.errors?.length?data.errors:[data.message||'CSV 파일을 업로드하지 못했습니다.'],'팀 CSV 업로드 오류','팀');codeMessage.textContent='CSV 오류를 확인해 주세요.';codeMessage.className='message bad';return}codeMessage.textContent=data.message;codeMessage.className='message good';await loadBasicCodes();showDepartmentCsvSuccess(data.message,'팀 CSV 업로드 완료')}catch(error){showDepartmentCsvErrors([error.message||'CSV 파일을 업로드하지 못했습니다.'],'팀 CSV 업로드 오류','팀')}});
+    function setupNamedCodeCsv(buttonId,fileId,endpoint,noun) { const fileInput=document.getElementById(fileId);document.getElementById(buttonId).onclick=()=>{if(!codeDistrictSeq.value){showDepartmentCsvErrors(['검색 결과에서 지자체를 먼저 선택해 주세요.'],noun+' CSV 업로드 오류',noun);return}fileInput.value='';fileInput.click()};fileInput.addEventListener('change',async()=>{const file=fileInput.files[0];if(!file)return;if(!confirm('파일업로드를 하시겠습니까?')){fileInput.value='';return}const body=new FormData();body.append('districtSeq',codeDistrictSeq.value);body.append('file',file);codeMessage.textContent='CSV 파일을 검사하고 있습니다...';codeMessage.className='message';try{const response=await fetch(endpoint,{method:'POST',body});const data=await response.json();if(!response.ok){showDepartmentCsvErrors(data.errors?.length?data.errors:[data.message||'CSV 파일을 업로드하지 못했습니다.'],noun+' CSV 업로드 오류',noun);codeMessage.textContent='CSV 오류를 확인해 주세요.';codeMessage.className='message bad';return}codeMessage.textContent=data.message;codeMessage.className='message good';await loadBasicCodes();showDepartmentCsvSuccess(data.message,noun+' CSV 업로드 완료')}catch(error){showDepartmentCsvErrors([error.message||'CSV 파일을 업로드하지 못했습니다.'],noun+' CSV 업로드 오류',noun)}}); }
+    setupNamedCodeCsv('openJobPositionCsv','jobPositionCsvFile','/supervisor/api/basic-codes/job-positions/upload','직위');
+    setupNamedCodeCsv('openPositionCsv','positionCsvFile','/supervisor/api/basic-codes/positions/upload','직책');
     document.getElementById('tab-codes').addEventListener('click',async event=>{const button=event.target.closest('.edit-code,.toggle-code,.delete-code');if(!button)return;const type=button.dataset.type;const list=type==='department'?codeState.departments:type==='team'?codeState.teams:type==='jobPosition'?codeState.jobPositions:codeState.positions;const item=list.find(x=>String(x.id)===button.dataset.id);if(!item)return;if(button.classList.contains('edit-code')){activateCodeTab(type);const form=document.querySelector('.code-form[data-code-type="'+type+'"]');form.elements.id.value=item.id;form.elements.name.value=item.name;if(type==='team')form.elements.departmentId.value=item.departmentId;form.scrollIntoView({behavior:'smooth',block:'center'});return}const deleting=button.classList.contains('delete-code');if(deleting&&!confirm('선택한 기본코드 '+item.name+'을(를) 삭제하시겠습니까?'))return;const response=await fetch('/supervisor/api/basic-codes/'+type+'/'+item.id+'/'+(deleting?'delete':'toggle'),{method:'POST'});const data=await response.json();codeMessage.textContent=data.message;codeMessage.className='message '+(response.ok?'good':'bad');if(response.ok)await loadBasicCodes()});
 
     applyFieldRoleUI();
@@ -2349,6 +2487,23 @@ async function ensureDistrictExists(db: Pool, districtSeq: number): Promise<Dist
 }
 
 export async function ensureSupervisorSchema(db: Pool): Promise<void> {
+  await db.query(`CREATE TABLE IF NOT EXISTS district_notices (
+    id BIGINT NOT NULL AUTO_INCREMENT,district_seq INT NULL,is_global BOOLEAN NOT NULL DEFAULT FALSE,title VARCHAR(200) NOT NULL,content TEXT NOT NULL,
+    attachment_path VARCHAR(500) NULL,attachment_name VARCHAR(255) NULL,is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    is_popup BOOLEAN NOT NULL DEFAULT FALSE,popup_from DATETIME NULL,popup_to DATETIME NULL,is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY(id),KEY idx_district_notices_active(district_seq,is_active,is_pinned,created_at),
+    CONSTRAINT fk_district_notice_district FOREIGN KEY(district_seq) REFERENCES korean_administrative_districts(seq) ON DELETE CASCADE
+  ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+  const [noticeScopeColumns] = await db.query(`
+    SELECT COLUMN_NAME AS columnName
+    FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='district_notices' AND COLUMN_NAME='is_global'
+  `);
+  if (!(noticeScopeColumns as Array<{ columnName: string }>).length) {
+    await db.query(`ALTER TABLE district_notices MODIFY district_seq INT NULL`);
+    await db.query(`ALTER TABLE district_notices ADD COLUMN is_global BOOLEAN NOT NULL DEFAULT FALSE AFTER district_seq`);
+  }
   await db.query(`CREATE TABLE IF NOT EXISTS supervisor_basic_code_sequences (
     code_date DATE NOT NULL, last_number INT NOT NULL DEFAULT 0, PRIMARY KEY(code_date)
   ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
@@ -2405,6 +2560,35 @@ export async function ensureSupervisorSchema(db: Pool): Promise<void> {
         ON DELETE CASCADE
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
   `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS supervisor_monthly_settlements (
+      district_seq INT NOT NULL,
+      billing_month CHAR(7) NOT NULL,
+      installment_number INT NOT NULL DEFAULT 1,
+      total_installments INT NOT NULL DEFAULT 1,
+      amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+      actual_deposit_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+      tax_invoice_issued BOOLEAN NOT NULL DEFAULT FALSE,
+      tax_invoice_date DATE NULL,
+      deposit_date DATE NULL,
+      deposit_account_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (district_seq, billing_month),
+      CONSTRAINT fk_monthly_settlement_district
+        FOREIGN KEY (district_seq) REFERENCES korean_administrative_districts(seq)
+        ON DELETE CASCADE
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  `);
+  for (const column of [
+    { name: 'installment_number', definition: 'INT NOT NULL DEFAULT 1' },
+    { name: 'total_installments', definition: 'INT NOT NULL DEFAULT 1' },
+    { name: 'amount', definition: 'DECIMAL(15,2) NOT NULL DEFAULT 0' },
+    { name: 'actual_deposit_amount', definition: 'DECIMAL(15,2) NOT NULL DEFAULT 0' },
+  ]) {
+    const [columns] = await db.query(`SHOW COLUMNS FROM supervisor_monthly_settlements LIKE '${column.name}'`);
+    if (Array.isArray(columns) && columns.length === 0) await db.query(`ALTER TABLE supervisor_monthly_settlements ADD COLUMN ${column.name} ${column.definition}`);
+  }
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS supervisor_field_configs (
@@ -2529,9 +2713,115 @@ async function nextBasicCode(connection: PoolConnection): Promise<string> {
   return `${current.codeDate}_${String(next).padStart(4, '0')}`;
 }
 
+type DepartmentCsvRow = { line: number; name: string; sortOrder: number; isActive: boolean };
+type TeamCsvRow = { line: number; departmentName: string; name: string; sortOrder: number; isActive: boolean };
+
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let field = '', quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"') {
+      if (quoted && line[index + 1] === '"') { field += '"'; index += 1; }
+      else quoted = !quoted;
+    } else if (character === ',' && !quoted) { fields.push(field.trim()); field = ''; }
+    else field += character;
+  }
+  if (quoted) throw new Error('닫히지 않은 큰따옴표가 있습니다.');
+  fields.push(field.trim());
+  return fields;
+}
+
+function parseDepartmentCsv(buffer: Buffer, noun = '부서', nameHeader = '부서명'): { rows: DepartmentCsvRow[]; errors: string[] } {
+  let text: string;
+  try { text = new TextDecoder('utf-8', { fatal: true }).decode(buffer).replace(/^\uFEFF/, ''); }
+  catch { return { rows: [], errors: ['파일이 UTF-8 형식이 아닙니다. UTF-8 CSV로 다시 저장해 주세요.'] }; }
+  const lines = text.split(/\r?\n/), errors: string[] = [];
+  let headers: string[];
+  try { headers = parseCsvLine(lines[0] ?? ''); }
+  catch (error) { return { rows: [], errors: [`1행: ${(error as Error).message}`] }; }
+  const expectedHeaders = [nameHeader, '정렬순서', '사용여부'];
+  if (headers.length !== expectedHeaders.length || headers.some((header, index) => header !== expectedHeaders[index])) return { rows: [], errors: [`1행: 헤더는 ${nameHeader},정렬순서,사용여부 순서여야 합니다.`] };
+  const rows: DepartmentCsvRow[] = [], seenNames = new Map<string, number>();
+  lines.slice(1).forEach((line, index) => {
+    const lineNumber = index + 2;
+    if (!line.trim()) return;
+    let fields: string[];
+    try { fields = parseCsvLine(line); } catch (error) { errors.push(`${lineNumber}행: ${(error as Error).message}`); return; }
+    if (fields.length !== 3) { errors.push(`${lineNumber}행: 열은 3개여야 합니다.`); return; }
+    const [name, sortOrderText, activeText] = fields;
+    if (!name) errors.push(`${lineNumber}행: ${nameHeader}은(는) 필수입니다.`);
+    else if (name.length > 100) errors.push(`${lineNumber}행: ${nameHeader}은(는) 100자 이하여야 합니다.`);
+    const normalizedName = name.toLocaleLowerCase('ko-KR');
+    if (name && seenNames.has(normalizedName)) errors.push(`${lineNumber}행: ${nameHeader} '${name}'이 ${seenNames.get(normalizedName)}행과 중복됩니다.`);
+    else if (name) seenNames.set(normalizedName, lineNumber);
+    const sortOrder = Number(sortOrderText);
+    if (!/^\d+$/.test(sortOrderText) || !Number.isSafeInteger(sortOrder) || sortOrder < 0) errors.push(`${lineNumber}행: 정렬순서는 0 이상의 정수여야 합니다.`);
+    const activeValues: Record<string, boolean> = { 사용: true, '1': true, Y: true, y: true, 중지: false, '0': false, N: false, n: false };
+    if (!(activeText in activeValues)) errors.push(`${lineNumber}행: 사용여부는 사용/중지, 1/0 또는 Y/N 중 하나여야 합니다.`);
+    rows.push({ line: lineNumber, name, sortOrder, isActive: activeValues[activeText] ?? false });
+  });
+  if (!rows.length && !errors.length) errors.push(`등록할 ${noun} 데이터가 없습니다.`);
+  return { rows, errors };
+}
+
+function parseTeamCsv(buffer: Buffer): { rows: TeamCsvRow[]; errors: string[] } {
+  let text: string;
+  try { text = new TextDecoder('utf-8', { fatal: true }).decode(buffer).replace(/^\uFEFF/, ''); }
+  catch { return { rows: [], errors: ['파일이 UTF-8 형식이 아닙니다. UTF-8 CSV로 다시 저장해 주세요.'] }; }
+  const lines = text.split(/\r?\n/), errors: string[] = [];
+  let headers: string[];
+  try { headers = parseCsvLine(lines[0] ?? ''); }
+  catch (error) { return { rows: [], errors: [`1행: ${(error as Error).message}`] }; }
+  const expectedHeaders = ['소속부서', '팀명', '정렬순서', '사용여부'];
+  if (headers.length !== expectedHeaders.length || headers.some((header, index) => header !== expectedHeaders[index])) return { rows: [], errors: ['1행: 헤더는 소속부서,팀명,정렬순서,사용여부 순서여야 합니다.'] };
+  const rows: TeamCsvRow[] = [], seenNames = new Map<string, number>();
+  lines.slice(1).forEach((line, index) => {
+    const lineNumber = index + 2;
+    if (!line.trim()) return;
+    let fields: string[];
+    try { fields = parseCsvLine(line); } catch (error) { errors.push(`${lineNumber}행: ${(error as Error).message}`); return; }
+    if (fields.length !== 4) { errors.push(`${lineNumber}행: 열은 4개여야 합니다.`); return; }
+    const [departmentName, name, sortOrderText, activeText] = fields;
+    if (!departmentName) errors.push(`${lineNumber}행: 소속부서는 필수입니다.`);
+    else if (departmentName.length > 100) errors.push(`${lineNumber}행: 소속부서는 100자 이하여야 합니다.`);
+    if (!name) errors.push(`${lineNumber}행: 팀명은 필수입니다.`);
+    else if (name.length > 100) errors.push(`${lineNumber}행: 팀명은 100자 이하여야 합니다.`);
+    const uniqueKey = `${departmentName.toLocaleLowerCase('ko-KR')}\u0000${name.toLocaleLowerCase('ko-KR')}`;
+    if (departmentName && name && seenNames.has(uniqueKey)) errors.push(`${lineNumber}행: '${departmentName} / ${name}'이 ${seenNames.get(uniqueKey)}행과 중복됩니다.`);
+    else if (departmentName && name) seenNames.set(uniqueKey, lineNumber);
+    const sortOrder = Number(sortOrderText);
+    if (!/^\d+$/.test(sortOrderText) || !Number.isSafeInteger(sortOrder) || sortOrder < 0) errors.push(`${lineNumber}행: 정렬순서는 0 이상의 정수여야 합니다.`);
+    const activeValues: Record<string, boolean> = { 사용: true, '1': true, Y: true, y: true, 중지: false, '0': false, N: false, n: false };
+    if (!(activeText in activeValues)) errors.push(`${lineNumber}행: 사용여부는 사용/중지, 1/0 또는 Y/N 중 하나여야 합니다.`);
+    rows.push({ line: lineNumber, departmentName, name, sortOrder, isActive: activeValues[activeText] ?? false });
+  });
+  if (!rows.length && !errors.length) errors.push('등록할 팀 데이터가 없습니다.');
+  return { rows, errors };
+}
+
+type SettlementContract = { contractDate: string | null; contractFrom: string | null; contractTo: string | null; contractStatus: string; subscriptionStatus: string | null; billingCycle: string | null };
+type SettlementPeriod = { billingMonth: string; periodFrom: string; periodTo: string };
+
+function buildSettlementPeriods(contract: SettlementContract): SettlementPeriod[] {
+  if (contract.contractStatus !== '계약' || contract.subscriptionStatus !== '구독중' || !contract.contractTo) return [];
+  const startText = contract.contractFrom || contract.contractDate;
+  if (!startText || !/^\d{4}-\d{2}-\d{2}$/.test(startText) || !/^\d{4}-\d{2}-\d{2}$/.test(contract.contractTo)) return [];
+  const [startYear,startMonth,startDay]=startText.split('-').map(Number), [endYear,endMonth,endDay]=contract.contractTo.split('-').map(Number);
+  const start=new Date(Date.UTC(startYear,startMonth-1,startDay)), end=new Date(Date.UTC(endYear,endMonth-1,endDay));
+  if (start>end) return [];
+  const monthCount=contract.billingCycle==='년'?12:((end.getUTCFullYear()-start.getUTCFullYear())*12+end.getUTCMonth()-start.getUTCMonth()+1);
+  const periods:SettlementPeriod[]=[];
+  for(let index=0;index<monthCount;index+=1){const monthStart=new Date(Date.UTC(start.getUTCFullYear(),start.getUTCMonth()+index,1));if(monthStart>end)break;const monthEnd=new Date(Date.UTC(monthStart.getUTCFullYear(),monthStart.getUTCMonth()+1,0));const periodStart=index===0?start:monthStart;const periodEnd=monthEnd>end?end:monthEnd;const dateText=(date:Date)=>date.toISOString().slice(0,10);periods.push({billingMonth:dateText(monthStart).slice(0,7),periodFrom:dateText(periodStart),periodTo:dateText(periodEnd)});}
+  return periods;
+}
+
 export function registerSupervisorRoutes(app: express.Express, db: Pool): void {
   const uploadsDir = path.join(process.cwd(), 'uploads');
   const upload = createUploadMiddleware(uploadsDir);
+  const departmentCsvUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 1 } });
+  const noticeUploadDir=path.join(uploadsDir,'notices');fs.mkdirSync(noticeUploadDir,{recursive:true});
+  const noticeUpload=multer({storage:multer.diskStorage({destination:(_request,_file,callback)=>callback(null,noticeUploadDir),filename:(_request,file,callback)=>callback(null,`${Date.now()}-${crypto.randomUUID()}${path.extname(file.originalname).toLowerCase()}`)}),limits:{fileSize:20*1024*1024,files:1}});
 
   app.use('/uploads', express.static(uploadsDir));
 
@@ -2585,6 +2875,30 @@ export function registerSupervisorRoutes(app: express.Express, db: Pool): void {
     response.redirect('/supervisor');
   });
 
+  app.get('/supervisor/api/notices',async(request,response)=>{
+    if(!getSupervisorAuth(request)){response.status(401).json({message:'로그인이 필요합니다.'});return}
+    const districtTarget=String(request.query.districtSeq??'');const isGlobal=districtTarget==='all';const districtSeq=Number(districtTarget);if(!isGlobal&&(!Number.isInteger(districtSeq)||districtSeq<1)){response.status(400).json({message:'지자체를 선택해 주세요.'});return}
+    const [rows]=await db.query(`SELECT id,is_global AS isGlobal,title,content,attachment_path AS attachmentPath,attachment_name AS attachmentName,is_pinned AS isPinned,is_popup AS isPopup,DATE_FORMAT(popup_from,'%Y-%m-%dT%H:%i') AS popupFrom,DATE_FORMAT(popup_to,'%Y-%m-%dT%H:%i') AS popupTo,is_active AS isActive,DATE_FORMAT(created_at,'%Y-%m-%d %H:%i') AS createdAt FROM district_notices WHERE ${isGlobal?'is_global=TRUE':'district_seq=? AND is_global=FALSE'} ORDER BY is_pinned DESC,created_at DESC,id DESC`,isGlobal?[]:[districtSeq]);
+    response.json({notices:rows});
+  });
+  app.get('/supervisor/api/notices/contracted-districts',async(request,response)=>{
+    if(!getSupervisorAuth(request)){response.status(401).json({message:'로그인이 필요합니다.'});return}
+    const query=String(request.query.q??'').trim();if(query.length<3){response.json({districts:[]});return}
+    const [rows]=await db.query(`SELECT d.seq,d.full_name AS fullName FROM korean_administrative_districts d JOIN supervisor_basic_settings s ON s.district_seq=d.seq AND s.contract_status='계약' WHERE d.full_name LIKE ? ORDER BY d.full_name LIMIT 30`,[`%${query}%`]);response.json({districts:rows});
+  });
+  app.post('/supervisor/api/notices',(request,response,next)=>noticeUpload.single('attachment')(request,response,async error=>{
+    if(error){next(error);return}if(!getSupervisorAuth(request)){response.status(401).json({message:'로그인이 필요합니다.'});return}
+    const id=Number(request.body.id||0),districtTarget=String(request.body.districtSeq??''),isGlobal=districtTarget==='all',districtSeq=isGlobal?null:Number(districtTarget),title=String(request.body.title??'').trim(),content=String(request.body.content??'').trim(),isPinned=String(request.body.isPinned??'')==='yes',isPopup=String(request.body.isPopup??'')==='yes',popupFrom=String(request.body.popupFrom??'').trim()||null,popupTo=String(request.body.popupTo??'').trim()||null;
+    if((!isGlobal&&(!Number.isInteger(districtSeq)||Number(districtSeq)<1))||!title||!content){response.status(400).json({message:'지자체, 제목, 내용을 입력해 주세요.'});return}
+    const [contractRows]=await db.query(isGlobal?"SELECT district_seq FROM supervisor_basic_settings WHERE contract_status='계약' LIMIT 1":"SELECT district_seq FROM supervisor_basic_settings WHERE district_seq=? AND contract_status='계약' LIMIT 1",isGlobal?[]:[districtSeq]);if(!(contractRows as Array<unknown>).length){response.status(400).json({message:isGlobal?'계약된 지자체가 없어 전체 공지를 등록할 수 없습니다.':'계약된 지자체에만 공지사항을 등록할 수 있습니다.'});return}
+    if(isPopup&&(!popupFrom||!popupTo||popupFrom>=popupTo)){response.status(400).json({message:'팝업 노출 시작·종료 기간을 올바르게 설정해 주세요.'});return}
+    const attachmentPath=request.file?`/uploads/notices/${request.file.filename}`:null,attachmentName=request.file?request.file.originalname:null;
+    if(id){await db.query(`UPDATE district_notices SET district_seq=?,is_global=?,title=?,content=?,is_pinned=?,is_popup=?,popup_from=?,popup_to=?,attachment_path=COALESCE(?,attachment_path),attachment_name=COALESCE(?,attachment_name) WHERE id=?`,[districtSeq,isGlobal,title,content,isPinned,isPopup,isPopup?popupFrom:null,isPopup?popupTo:null,attachmentPath,attachmentName,id])}
+    else await db.query(`INSERT INTO district_notices(district_seq,is_global,title,content,attachment_path,attachment_name,is_pinned,is_popup,popup_from,popup_to) VALUES(?,?,?,?,?,?,?,?,?,?)`,[districtSeq,isGlobal,title,content,attachmentPath,attachmentName,isPinned,isPopup,isPopup?popupFrom:null,isPopup?popupTo:null]);
+    response.json({message:'공지사항을 저장했습니다.'});
+  }));
+  app.post('/supervisor/api/notices/:id/delete',async(request,response)=>{if(!getSupervisorAuth(request)){response.status(401).json({message:'로그인이 필요합니다.'});return}const id=Number(request.params.id);await db.query('DELETE FROM district_notices WHERE id=?',[id]);response.json({message:'공지사항을 삭제했습니다.'})});
+
   app.get('/supervisor/api/basic-codes', async (request, response) => {
     if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.' }); return; }
     const districtSeq = Number(request.query.districtSeq);
@@ -2596,6 +2910,204 @@ export function registerSupervisorRoutes(app: express.Express, db: Pool): void {
     const [jobPositions] = await db.query('SELECT id,code,name,is_active AS isActive FROM organization_job_positions WHERE district_seq=? ORDER BY sort_order,name', [districtSeq]);
     response.json({ departments, teams, jobPositions, positions });
   });
+
+  app.get('/supervisor/api/settlements', async (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.' }); return; }
+    const districtSeq=Number(request.query.districtSeq);
+    if(!Number.isInteger(districtSeq)||districtSeq<=0){response.status(400).json({message:'지자체를 선택해 주세요.'});return}
+    const district=await ensureDistrictExists(db,districtSeq);
+    const [settingRows]=await db.query(`SELECT DATE_FORMAT(contract_date,'%Y-%m-%d') AS contractDate,DATE_FORMAT(contract_from,'%Y-%m-%d') AS contractFrom,DATE_FORMAT(contract_to,'%Y-%m-%d') AS contractTo,contract_status AS contractStatus,subscription_status AS subscriptionStatus,billing_cycle AS billingCycle FROM supervisor_basic_settings WHERE district_seq=? LIMIT 1`,[districtSeq]);
+    const contract=(settingRows as SettlementContract[])[0];
+    if(!contract){response.json({valid:false,summary:`${district.full_name} · 계약 정보 없음`,message:'기본사항에서 계약 정보를 먼저 등록해 주세요.',rows:[]});return}
+    const periods=buildSettlementPeriods(contract);
+    const summary=`계약기간 ${contract.contractFrom||contract.contractDate||'-'} ~ ${contract.contractTo||'-'} · 구독방식 ${contract.billingCycle||'-'}`;
+    if(!periods.length){response.json({valid:false,summary,message:'계약상태가 계약, 구독상태가 구독중이며 유효한 계약기간이 설정되어야 합니다.',rows:[]});return}
+    const [savedRows]=await db.query(`SELECT billing_month AS billingMonth,installment_number AS installmentNumber,total_installments AS totalInstallments,amount,actual_deposit_amount AS actualDepositAmount,tax_invoice_issued AS taxInvoiceIssued,DATE_FORMAT(tax_invoice_date,'%Y-%m-%d') AS taxInvoiceDate,DATE_FORMAT(deposit_date,'%Y-%m-%d') AS depositDate,deposit_account_confirmed AS depositAccountConfirmed FROM supervisor_monthly_settlements WHERE district_seq=?`,[districtSeq]);
+    const saved=new Map((savedRows as Array<{billingMonth:string;installmentNumber:number;totalInstallments:number;amount:string;actualDepositAmount:string;taxInvoiceIssued:number;taxInvoiceDate:string|null;depositDate:string|null;depositAccountConfirmed:number}>).map(row=>[row.billingMonth,row]));
+    const rows=periods.map((period,index)=>{const row=saved.get(period.billingMonth);return{...period,locked:Boolean(row),installmentNumber:row?.installmentNumber||index+1,totalInstallments:row?.totalInstallments||periods.length,amount:Number(row?.amount||0),actualDepositAmount:Number(row?.actualDepositAmount||0),taxInvoiceIssued:Boolean(row?.taxInvoiceIssued),taxInvoiceDate:row?.taxInvoiceDate||null,depositDate:row?.depositDate||null,depositAccountConfirmed:Boolean(row?.depositAccountConfirmed)}});
+    const currentMonth=new Date().toISOString().slice(0,7),dueRows=rows.filter(row=>row.billingMonth<=currentMonth),dueAmount=dueRows.reduce((sum,row)=>sum+row.amount,0),actualAmount=dueRows.reduce((sum,row)=>sum+row.actualDepositAmount,0),totalAmount=rows.reduce((sum,row)=>sum+row.amount,0);
+    const won=(value:number)=>new Intl.NumberFormat('ko-KR').format(value)+'원';
+    response.json({valid:true,summary,amountSummary:`현재까지 실입금 ${won(actualAmount)} / 예정 ${won(dueAmount)} · 전체 계약금액 ${won(totalAmount)}`,rows});
+  });
+
+  app.put('/supervisor/api/settlements/:districtSeq/:billingMonth', async (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.' }); return; }
+    const districtSeq=Number(request.params.districtSeq),billingMonth=String(request.params.billingMonth||'');
+    if(!Number.isInteger(districtSeq)||districtSeq<=0||!/^\d{4}-\d{2}$/.test(billingMonth)){response.status(400).json({message:'정산 대상을 확인해 주세요.'});return}
+    const [settingRows]=await db.query(`SELECT DATE_FORMAT(contract_date,'%Y-%m-%d') AS contractDate,DATE_FORMAT(contract_from,'%Y-%m-%d') AS contractFrom,DATE_FORMAT(contract_to,'%Y-%m-%d') AS contractTo,contract_status AS contractStatus,subscription_status AS subscriptionStatus,billing_cycle AS billingCycle FROM supervisor_basic_settings WHERE district_seq=? LIMIT 1`,[districtSeq]);
+    const contract=(settingRows as SettlementContract[])[0], periods=contract?buildSettlementPeriods(contract):[];
+    if(!periods.some(period=>period.billingMonth===billingMonth)){response.status(400).json({message:'유효한 구독기간에 포함된 정산월만 저장할 수 있습니다.'});return}
+    const [existingRows]=await db.query('SELECT 1 FROM supervisor_monthly_settlements WHERE district_seq=? AND billing_month=? LIMIT 1',[districtSeq,billingMonth]);
+    if((existingRows as unknown[]).length){response.status(409).json({message:'이미 저장된 구독항목은 수정할 수 없습니다.'});return}
+    const installmentNumber=Number(request.body.installmentNumber),totalInstallments=Number(request.body.totalInstallments),amount=Number(request.body.amount),actualDepositAmount=Number(request.body.actualDepositAmount),taxInvoiceIssued=request.body.taxInvoiceIssued===true,taxInvoiceDate=request.body.taxInvoiceDate?String(request.body.taxInvoiceDate):null,depositDate=request.body.depositDate?String(request.body.depositDate):null,depositAccountConfirmed=request.body.depositAccountConfirmed===true;
+    if(!Number.isInteger(installmentNumber)||installmentNumber<1||!Number.isInteger(totalInstallments)||totalInstallments<1||installmentNumber>totalInstallments){response.status(400).json({message:'회차는 전체 회차 이내의 1 이상 정수로 입력해 주세요.'});return}
+    if(!Number.isFinite(amount)||amount<0||!Number.isFinite(actualDepositAmount)||actualDepositAmount<0){response.status(400).json({message:'금액은 0 이상의 숫자로 입력해 주세요.'});return}
+    if(actualDepositAmount>amount){response.status(400).json({message:'실입금액은 청구금액보다 많을 수 없습니다.'});return}
+    if(taxInvoiceIssued&&!taxInvoiceDate){response.status(400).json({message:'세금계산서 발급일을 입력해 주세요.'});return}
+    if((taxInvoiceDate&&!/^\d{4}-\d{2}-\d{2}$/.test(taxInvoiceDate))||(depositDate&&!/^\d{4}-\d{2}-\d{2}$/.test(depositDate))){response.status(400).json({message:'날짜 형식을 확인해 주세요.'});return}
+    try { await db.query(`INSERT INTO supervisor_monthly_settlements(district_seq,billing_month,installment_number,total_installments,amount,actual_deposit_amount,tax_invoice_issued,tax_invoice_date,deposit_date,deposit_account_confirmed) VALUES(?,?,?,?,?,?,?,?,?,?)`,[districtSeq,billingMonth,installmentNumber,totalInstallments,amount,actualDepositAmount,taxInvoiceIssued,taxInvoiceIssued?taxInvoiceDate:null,depositDate,depositAccountConfirmed]); }
+    catch(error){if((error as {code?:string}).code==='ER_DUP_ENTRY'){response.status(409).json({message:'이미 저장된 구독항목은 수정할 수 없습니다.'});return}throw error}
+    response.json({message:`${billingMonth} 정산 정보가 저장되었습니다.`});
+  });
+
+  app.get('/supervisor/api/settlements/export.xls', async (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).send('로그인이 필요합니다.'); return; }
+    const districtSeq=Number(request.query.districtSeq);
+    if(!Number.isInteger(districtSeq)||districtSeq<=0){response.status(400).send('지자체를 선택해 주세요.');return}
+    const district=await ensureDistrictExists(db,districtSeq);
+    const [settingRows]=await db.query(`SELECT DATE_FORMAT(contract_date,'%Y-%m-%d') AS contractDate,DATE_FORMAT(contract_from,'%Y-%m-%d') AS contractFrom,DATE_FORMAT(contract_to,'%Y-%m-%d') AS contractTo,contract_status AS contractStatus,subscription_status AS subscriptionStatus,billing_cycle AS billingCycle FROM supervisor_basic_settings WHERE district_seq=? LIMIT 1`,[districtSeq]);
+    const contract=(settingRows as SettlementContract[])[0],periods=contract?buildSettlementPeriods(contract):[];
+    if(!periods.length){response.status(400).send('유효한 구독 계약이 없습니다.');return}
+    const [savedRows]=await db.query(`SELECT billing_month AS billingMonth,installment_number AS installmentNumber,total_installments AS totalInstallments,amount,actual_deposit_amount AS actualDepositAmount,tax_invoice_issued AS taxInvoiceIssued,DATE_FORMAT(tax_invoice_date,'%Y-%m-%d') AS taxInvoiceDate,DATE_FORMAT(deposit_date,'%Y-%m-%d') AS depositDate,deposit_account_confirmed AS depositAccountConfirmed FROM supervisor_monthly_settlements WHERE district_seq=?`,[districtSeq]);
+    const saved=new Map((savedRows as Array<{billingMonth:string;installmentNumber:number;totalInstallments:number;amount:string;actualDepositAmount:string;taxInvoiceIssued:number;taxInvoiceDate:string|null;depositDate:string|null;depositAccountConfirmed:number}>).map(row=>[row.billingMonth,row]));
+    const rows=periods.map((period,index)=>{const row=saved.get(period.billingMonth);return{...period,installmentNumber:row?.installmentNumber||index+1,totalInstallments:row?.totalInstallments||periods.length,amount:Number(row?.amount||0),actualDepositAmount:Number(row?.actualDepositAmount||0),taxInvoiceIssued:Boolean(row?.taxInvoiceIssued),taxInvoiceDate:row?.taxInvoiceDate||'',depositDate:row?.depositDate||'',depositAccountConfirmed:Boolean(row?.depositAccountConfirmed)}});
+    const currentMonth=new Date().toISOString().slice(0,7),dueRows=rows.filter(row=>row.billingMonth<=currentMonth),dueAmount=dueRows.reduce((sum,row)=>sum+row.amount,0),actualAmount=dueRows.reduce((sum,row)=>sum+row.actualDepositAmount,0),totalAmount=rows.reduce((sum,row)=>sum+row.amount,0);
+    const xmlEscape=(value:unknown)=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+    const cell=(value:unknown,type='String')=>`<Cell><Data ss:Type="${type}">${xmlEscape(value)}</Data></Cell>`;
+    const header=['정산월','구독기간','회차','전체회차','청구금액','실입금액','세금계산서 발급','발급일','입금일','입금계좌 확인'];
+    const dataRows=rows.map(row=>`<Row>${cell(row.billingMonth)}${cell(`${row.periodFrom} ~ ${row.periodTo}`)}${cell(row.installmentNumber,'Number')}${cell(row.totalInstallments,'Number')}${cell(row.amount,'Number')}${cell(row.actualDepositAmount,'Number')}${cell(row.taxInvoiceIssued?'발급':'미발급')}${cell(row.taxInvoiceDate)}${cell(row.depositDate)}${cell(row.depositAccountConfirmed?'확인':'미확인')}</Row>`).join('');
+    const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="정산"><Table><Row>${cell('지자체')}${cell(district.full_name)}</Row><Row>${cell('계약기간')}${cell(`${contract.contractFrom||contract.contractDate} ~ ${contract.contractTo}`)}</Row><Row>${cell('현재까지 예정금액')}${cell(dueAmount,'Number')}${cell('현재까지 실입금액')}${cell(actualAmount,'Number')}${cell('전체 계약금액')}${cell(totalAmount,'Number')}</Row><Row>${header.map(value=>cell(value)).join('')}</Row>${dataRows}</Table></Worksheet></Workbook>`;
+    response.setHeader('Content-Type','application/vnd.ms-excel; charset=utf-8');
+    response.setHeader('Content-Disposition',`attachment; filename*=UTF-8''settlement-${districtSeq}.xls`);
+    response.send(xml);
+  });
+
+  app.get('/supervisor/api/basic-codes/departments/sample.csv', (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).send('로그인이 필요합니다.'); return; }
+    const csv = '\uFEFF부서명,정렬순서,사용여부\r\n기획예산과,10,사용\r\n총무과,20,사용\r\n민원여권과,30,중지\r\n';
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader('Content-Disposition', "attachment; filename*=UTF-8''department-upload-sample.csv");
+    response.send(csv);
+  });
+
+  app.post('/supervisor/api/basic-codes/departments/upload', (request, response, next) => {
+    departmentCsvUpload.single('file')(request, response, (error) => {
+      if (error) { response.status(400).json({ message: 'CSV 파일을 읽지 못했습니다.', errors: [error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE' ? 'CSV 파일은 2MB 이하여야 합니다.' : 'CSV 파일은 한 개만 업로드할 수 있습니다.'] }); return; }
+      next();
+    });
+  }, async (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.', errors: ['로그인이 필요합니다.'] }); return; }
+    const districtSeq = Number(request.body.districtSeq), file = request.file;
+    if (!Number.isInteger(districtSeq) || districtSeq <= 0 || !file) { response.status(400).json({ message: '지자체와 CSV 파일을 선택해 주세요.', errors: ['지자체와 CSV 파일을 선택해 주세요.'] }); return; }
+    if (path.extname(file.originalname).toLowerCase() !== '.csv') { response.status(400).json({ message: 'CSV 파일만 업로드할 수 있습니다.', errors: ['파일 확장자는 .csv여야 합니다.'] }); return; }
+    const parsed = parseDepartmentCsv(file.buffer);
+    try {
+      await ensureDistrictExists(db, districtSeq);
+      const [existingRows] = await db.query('SELECT name FROM organization_departments WHERE district_seq=?', [districtSeq]);
+      const existingNames = new Set((existingRows as Array<{name:string}>).map((item) => item.name.toLocaleLowerCase('ko-KR')));
+      for (const row of parsed.rows) if (existingNames.has(row.name.toLocaleLowerCase('ko-KR'))) parsed.errors.push(`${row.line}행: 부서명 '${row.name}'은(는) 이미 등록되어 있습니다.`);
+    } catch { parsed.errors.push('선택한 지자체를 확인할 수 없습니다.'); }
+    if (parsed.errors.length) { response.status(400).json({ message: 'CSV 검증 오류가 있습니다.', errors: parsed.errors }); return; }
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+      for (const row of parsed.rows) {
+        const code = await nextBasicCode(connection);
+        await connection.query('INSERT INTO organization_departments(district_seq,code,name,sort_order,is_active) VALUES(?,?,?,?,?)', [districtSeq,code,row.name,row.sortOrder,row.isActive]);
+      }
+      await connection.commit();
+      response.json({ message: `총 ${parsed.rows.length}건이 업로드되었습니다.`, count: parsed.rows.length });
+    } catch (error) {
+      await connection.rollback();
+      const duplicate = (error as {code?:string}).code === 'ER_DUP_ENTRY';
+      response.status(400).json({ message: 'CSV 저장 중 오류가 발생했습니다.', errors: [duplicate ? '저장 시점에 중복된 부서가 발견되어 전체 저장을 취소했습니다.' : '데이터베이스 오류가 발생하여 전체 저장을 취소했습니다.'] });
+    } finally { connection.release(); }
+  });
+
+  app.get('/supervisor/api/basic-codes/teams/sample.csv', (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).send('로그인이 필요합니다.'); return; }
+    const csv = '\uFEFF소속부서,팀명,정렬순서,사용여부\r\n기획예산과,기획팀,10,사용\r\n기획예산과,예산팀,20,사용\r\n총무과,인사팀,10,중지\r\n';
+    response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    response.setHeader('Content-Disposition', "attachment; filename*=UTF-8''team-upload-sample.csv");
+    response.send(csv);
+  });
+
+  app.post('/supervisor/api/basic-codes/teams/upload', (request, response, next) => {
+    departmentCsvUpload.single('file')(request, response, (error) => {
+      if (error) { response.status(400).json({ message: 'CSV 파일을 읽지 못했습니다.', errors: [error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE' ? 'CSV 파일은 2MB 이하여야 합니다.' : 'CSV 파일은 한 개만 업로드할 수 있습니다.'] }); return; }
+      next();
+    });
+  }, async (request, response) => {
+    if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.', errors: ['로그인이 필요합니다.'] }); return; }
+    const districtSeq = Number(request.body.districtSeq), file = request.file;
+    if (!Number.isInteger(districtSeq) || districtSeq <= 0 || !file) { response.status(400).json({ message: '지자체와 CSV 파일을 선택해 주세요.', errors: ['지자체와 CSV 파일을 선택해 주세요.'] }); return; }
+    if (path.extname(file.originalname).toLowerCase() !== '.csv') { response.status(400).json({ message: 'CSV 파일만 업로드할 수 있습니다.', errors: ['파일 확장자는 .csv여야 합니다.'] }); return; }
+    const parsed = parseTeamCsv(file.buffer), departmentIds = new Map<string, number>();
+    try {
+      await ensureDistrictExists(db, districtSeq);
+      const [departmentRows] = await db.query('SELECT id,name FROM organization_departments WHERE district_seq=?', [districtSeq]);
+      for (const item of departmentRows as Array<{id:number;name:string}>) departmentIds.set(item.name.toLocaleLowerCase('ko-KR'), item.id);
+      const [existingRows] = await db.query(`SELECT d.name AS departmentName,t.name FROM organization_teams t JOIN organization_departments d ON d.id=t.department_id WHERE d.district_seq=?`, [districtSeq]);
+      const existingNames = new Set((existingRows as Array<{departmentName:string;name:string}>).map((item) => `${item.departmentName.toLocaleLowerCase('ko-KR')}\u0000${item.name.toLocaleLowerCase('ko-KR')}`));
+      for (const row of parsed.rows) {
+        const departmentKey = row.departmentName.toLocaleLowerCase('ko-KR');
+        if (row.departmentName && !departmentIds.has(departmentKey)) parsed.errors.push(`${row.line}행: 소속부서 '${row.departmentName}'을(를) 찾을 수 없습니다.`);
+        if (existingNames.has(`${departmentKey}\u0000${row.name.toLocaleLowerCase('ko-KR')}`)) parsed.errors.push(`${row.line}행: '${row.departmentName} / ${row.name}'은(는) 이미 등록되어 있습니다.`);
+      }
+    } catch { parsed.errors.push('선택한 지자체를 확인할 수 없습니다.'); }
+    if (parsed.errors.length) { response.status(400).json({ message: 'CSV 검증 오류가 있습니다.', errors: parsed.errors }); return; }
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+      for (const row of parsed.rows) {
+        const code = await nextBasicCode(connection), departmentId = departmentIds.get(row.departmentName.toLocaleLowerCase('ko-KR'))!;
+        await connection.query('INSERT INTO organization_teams(department_id,code,name,sort_order,is_active) VALUES(?,?,?,?,?)', [departmentId,code,row.name,row.sortOrder,row.isActive]);
+      }
+      await connection.commit();
+      response.json({ message: `총 ${parsed.rows.length}건이 업로드되었습니다.`, count: parsed.rows.length });
+    } catch (error) {
+      await connection.rollback();
+      const duplicate = (error as {code?:string}).code === 'ER_DUP_ENTRY';
+      response.status(400).json({ message: 'CSV 저장 중 오류가 발생했습니다.', errors: [duplicate ? '저장 시점에 중복된 팀이 발견되어 전체 저장을 취소했습니다.' : '데이터베이스 오류가 발생하여 전체 저장을 취소했습니다.'] });
+    } finally { connection.release(); }
+  });
+
+  const namedCodeCsvConfigs = [
+    { route: 'job-positions', noun: '직위', nameHeader: '직위명', table: 'organization_job_positions', sampleName: 'job-position-upload-sample.csv', samples: ['과장', '팀장', '주무관'] },
+    { route: 'positions', noun: '직책', nameHeader: '직책명', table: 'organization_positions', sampleName: 'position-upload-sample.csv', samples: ['부서장', '팀책임자', '담당자'] },
+  ] as const;
+  for (const config of namedCodeCsvConfigs) {
+    app.get(`/supervisor/api/basic-codes/${config.route}/sample.csv`, (request, response) => {
+      if (!getSupervisorAuth(request)) { response.status(401).send('로그인이 필요합니다.'); return; }
+      const csv = `\uFEFF${config.nameHeader},정렬순서,사용여부\r\n${config.samples[0]},10,사용\r\n${config.samples[1]},20,사용\r\n${config.samples[2]},30,중지\r\n`;
+      response.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      response.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${config.sampleName}`);
+      response.send(csv);
+    });
+    app.post(`/supervisor/api/basic-codes/${config.route}/upload`, (request, response, next) => {
+      departmentCsvUpload.single('file')(request, response, (error) => {
+        if (error) { response.status(400).json({ message: 'CSV 파일을 읽지 못했습니다.', errors: [error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE' ? 'CSV 파일은 2MB 이하여야 합니다.' : 'CSV 파일은 한 개만 업로드할 수 있습니다.'] }); return; }
+        next();
+      });
+    }, async (request, response) => {
+      if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.', errors: ['로그인이 필요합니다.'] }); return; }
+      const districtSeq = Number(request.body.districtSeq), file = request.file;
+      if (!Number.isInteger(districtSeq) || districtSeq <= 0 || !file) { response.status(400).json({ message: '지자체와 CSV 파일을 선택해 주세요.', errors: ['지자체와 CSV 파일을 선택해 주세요.'] }); return; }
+      if (path.extname(file.originalname).toLowerCase() !== '.csv') { response.status(400).json({ message: 'CSV 파일만 업로드할 수 있습니다.', errors: ['파일 확장자는 .csv여야 합니다.'] }); return; }
+      const parsed = parseDepartmentCsv(file.buffer, config.noun, config.nameHeader);
+      try {
+        await ensureDistrictExists(db, districtSeq);
+        const [existingRows] = await db.query(`SELECT name FROM ${config.table} WHERE district_seq=?`, [districtSeq]);
+        const existingNames = new Set((existingRows as Array<{name:string}>).map((item) => item.name.toLocaleLowerCase('ko-KR')));
+        for (const row of parsed.rows) if (existingNames.has(row.name.toLocaleLowerCase('ko-KR'))) parsed.errors.push(`${row.line}행: ${config.nameHeader} '${row.name}'은(는) 이미 등록되어 있습니다.`);
+      } catch { parsed.errors.push('선택한 지자체를 확인할 수 없습니다.'); }
+      if (parsed.errors.length) { response.status(400).json({ message: 'CSV 검증 오류가 있습니다.', errors: parsed.errors }); return; }
+      const connection = await db.getConnection();
+      try {
+        await connection.beginTransaction();
+        for (const row of parsed.rows) {
+          const code = await nextBasicCode(connection);
+          await connection.query(`INSERT INTO ${config.table}(district_seq,code,name,sort_order,is_active) VALUES(?,?,?,?,?)`, [districtSeq,code,row.name,row.sortOrder,row.isActive]);
+        }
+        await connection.commit();
+        response.json({ message: `총 ${parsed.rows.length}건이 업로드되었습니다.`, count: parsed.rows.length });
+      } catch (error) {
+        await connection.rollback();
+        const duplicate = (error as {code?:string}).code === 'ER_DUP_ENTRY';
+        response.status(400).json({ message: 'CSV 저장 중 오류가 발생했습니다.', errors: [duplicate ? `저장 시점에 중복된 ${config.noun}가 발견되어 전체 저장을 취소했습니다.` : '데이터베이스 오류가 발생하여 전체 저장을 취소했습니다.'] });
+      } finally { connection.release(); }
+    });
+  }
 
   app.post('/supervisor/api/basic-codes', async (request, response) => {
     if (!getSupervisorAuth(request)) { response.status(401).json({ message: '로그인이 필요합니다.' }); return; }

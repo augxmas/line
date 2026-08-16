@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 import type { Pool, RowDataPacket } from 'mysql2/promise';
 
 const ADMIN_COOKIE = 'admin_auth';
-const ADMIN_SESSION_MINUTES = 100;
+const ADMIN_SESSION_MINUTES = 10;
 const ADMIN_SESSION_MAX_AGE = ADMIN_SESSION_MINUTES * 60 * 1000;
 const ADMIN_ROLES = [
   { value: 'requester', label: '요청자' },
